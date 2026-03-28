@@ -252,8 +252,8 @@ $price_couple = 230000; // Giá ghế đôi
                     selectedSeatsArr = selectedSeatsArr.filter(id => id !== seatId);
                     totalPrice -= price;
                 } else {
-                    if(selectedSeatsArr.length >= 10) {
-                        alert("Bạn chỉ được chọn tối đa 10 ghế cho một lần giao dịch để chống đầu cơ vé.");
+                    if(selectedSeatsArr.length >= 50) {
+                        alert("Bạn chỉ được chọn tối đa 50 ghế cho một lần giao dịch để chống đầu cơ vé.");
                         return;
                     }
                     seat.classList.add('selected');

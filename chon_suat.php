@@ -45,9 +45,17 @@ foreach ($all_orders as $order) {
     if (!isset($booked_counts[$time_room_key])) {
         $booked_counts[$time_room_key] = 0;
     }
-    // Đếm số lượng ghế trong chuỗi
-    $seats = explode(',', $order['seat_numbers']);
-    $booked_counts[$time_room_key] += count(array_filter($seats));
+    // Đếm số lượng ghế (Ghế J là ghế đôi -> tính 2 chỗ/người)
+    $seats = array_filter(explode(',', $order['seat_numbers']));
+    foreach ($seats as $seat) {
+        $seat_name = trim($seat);
+        // Nếu tên ghế bắt đầu bằng chữ 'J' thì cộng 2
+        if (strpos($seat_name, 'J') === 0) {
+            $booked_counts[$time_room_key] += 2;
+        } else {
+            $booked_counts[$time_room_key] += 1;
+        }
+    }
 }
 
 // 3. Nhóm suất chiếu theo Ngày -> Cụm Rạp

@@ -71,9 +71,16 @@ foreach ($orders_data as $od) {
     if (!isset($booked_counts[$key])) {
         $booked_counts[$key] = 0;
     }
-    // Đếm số lượng ghế ngăn cách bởi dấu phẩy
+    // Đếm số lượng ghế (Ghế J là ghế đôi -> tính 2 chỗ/người)
     $seats = array_filter(explode(',', $od['seat_numbers']));
-    $booked_counts[$key] += count($seats);
+    foreach ($seats as $seat) {
+        $seat_name = trim($seat);
+        if (strpos($seat_name, 'J') === 0) {
+            $booked_counts[$key] += 2;
+        } else {
+            $booked_counts[$key] += 1;
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
