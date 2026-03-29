@@ -2,7 +2,7 @@
 
 // Cấu hình API Google
 $google_client_id = '277444230924-6b00s794lm9sg1e5hp5sfupu4v5te5s0.apps.googleusercontent.com';
-$google_redirect_uri = 'http://localhost/GOLDCINEMA/google_callback.php';
+$google_redirect_uri = 'http://goldcinema.wuaze.com/google_callback.php';
 
 // Tạo link Đăng nhập Google
 $google_auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" . http_build_query([
