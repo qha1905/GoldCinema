@@ -1,10 +1,10 @@
 <?php
 // File: includes/db_connect.php
 
-$host = 'localhost';
-$dbname = 'goldcinema';
-$username = 'root';
-$password = '';
+$host = 'sql208.infinityfree.com';
+$dbname = 'if0_41322676_cinemaweb';
+$username = 'if0_41322676';
+$password = 'be9NATHNTsf';
 
 try {
     // Tạo kết nối PDO
