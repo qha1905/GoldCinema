@@ -340,9 +340,11 @@ $cinemas_revenue = $pdo->query($sql_cinemas)->fetchAll();
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <?php if ($movie['status'] == 'now_showing'): ?>
-                                            <span class="px-2 py-1 rounded-md text-[9px] font-black uppercase bg-green-500/10 text-green-500">Đang chiếu</span>
+                                            <span class="px-2 py-1 rounded-md text-[9px] font-black uppercase bg-green-500/10 text-green-500 border border-green-500/20">Đang chiếu</span>
+                                        <?php elseif ($movie['status'] == 'coming_soon'): ?>
+                                            <span class="px-2 py-1 rounded-md text-[9px] font-black uppercase bg-amber-500/10 text-amber-500 border border-amber-500/20">Sắp chiếu</span>
                                         <?php else: ?>
-                                            <span class="px-2 py-1 rounded-md text-[9px] font-black uppercase bg-amber-500/10 text-amber-500">Sắp chiếu</span>
+                                            <span class="px-2 py-1 rounded-md text-[9px] font-black uppercase bg-slate-500/10 text-slate-400 border border-slate-500/20">Ngừng chiếu</span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="px-6 py-4 text-center text-sm font-bold text-slate-300">
