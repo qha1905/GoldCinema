@@ -125,9 +125,8 @@ $price_couple = 230000; // Giá ghế đôi
                     <?php
                     $rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
                     $cols = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-                    $vip_cols = [3, 4, 5, 6, 7, 8]; // Khu vực trung tâm
+                    $vip_cols = [3, 4, 5, 6, 7, 8]; 
 
-                    // In các hàng từ A đến I
                     foreach ($rows as $r) {
                         echo '<div class="flex items-center justify-center gap-1.5">';
                         echo '<div class="w-6 text-center text-slate-500 font-bold text-sm mr-2">'.$r.'</div>';
@@ -136,7 +135,6 @@ $price_couple = 230000; // Giá ghế đôi
                             $seat_id = $r . $c;
                             $is_booked = in_array($seat_id, $booked_seats);
                             
-                            // Logic: 3 hàng đầu (A,B,C) là ghế thường, còn lại xét xem có nằm ở trung tâm không
                             if (in_array($r, ['A', 'B', 'C'])) {
                                 $is_vip = false;
                             } else {
@@ -164,14 +162,13 @@ $price_couple = 230000; // Giá ghế đôi
                     // In hàng J - Ghế Đôi (Couple Row)
                     $couple_row = 'J';
                     $couple_seats = [1, 2, 3, 4, 5];
-                    echo '<div class="flex items-center justify-center gap-1.5 mt-6">'; // Khoảng cách rộng hơn 1 chút
+                    echo '<div class="flex items-center justify-center gap-1.5 mt-6">';
                     echo '<div class="w-6 text-center text-[#f472b6] font-bold text-sm mr-2">'.$couple_row.'</div>';
                     
                     foreach ($couple_seats as $c) {
                         $seat_id = $couple_row . $c;
                         $is_booked = in_array($seat_id, $booked_seats);
                         
-                        // Ghế đôi chiếm chiều rộng = 2 ghế thường + gap
                         $seat_class = 'seat h-11 rounded-t-xl rounded-b-md flex items-center justify-center text-xs font-bold cursor-pointer select-none w-[86px] '; 
                         
                         if ($is_booked) {
@@ -182,7 +179,6 @@ $price_couple = 230000; // Giá ghế đôi
                             $price = $price_couple;
                         }
 
-                        // Lối đi căn chuẩn với các hàng phía trên
                         $margin_class = ($c == 1 || $c == 4) ? 'mr-8 md:mr-12' : '';
 
                         echo '<div class="'.$seat_class.' '.$margin_class.'" data-seat="'.$seat_id.'" data-price="'.$price.'" data-booked="'.($is_booked ? 'true' : 'false').'">
@@ -210,6 +206,11 @@ $price_couple = 230000; // Giá ghế đôi
                 <div class="mb-6 min-h-[60px]">
                     <p class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-2">Ghế đã chọn</p>
                     <p id="selectedSeatsText" class="text-base font-bold text-primary leading-relaxed">Chưa chọn ghế</p>
+                    
+                    <div id="orphanWarning" class="hidden mt-3 px-3 py-2.5 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-2 text-red-500 transition-all">
+                        <span class="material-symbols-outlined text-[18px]">error</span>
+                        <p class="text-[12px] font-bold leading-snug">Vui lòng không để trống 1 ghế duy nhất kế bên ghế bạn vừa chọn hoặc kế lối đi.</p>
+                    </div>
                 </div>
 
                 <div class="flex items-end justify-between mb-8 bg-background-dark p-4 rounded-xl border border-accent-dark">
@@ -242,6 +243,67 @@ $price_couple = 230000; // Giá ghế đôi
         let selectedSeatsArr = [];
         let totalPrice = 0;
 
+        // ==============================================================
+        // THUẬT TOÁN KIỂM TRA LỖI "CHỪA TRỐNG 1 GHẾ" (Anti-Orphan Seat)
+        // ==============================================================
+        function checkOrphanSeats() {
+            // Khai báo các "cụm ghế" liên tiếp nhau (bị cắt bởi lối đi)
+            const blocks = [
+                // Khai báo 9 hàng đầu (A tới I)
+                ...['A','B','C','D','E','F','G','H','I'].flatMap(r => [
+                    [1, 2].map(c => r+c),               // Cụm trái
+                    [3, 4, 5, 6, 7, 8].map(c => r+c),   // Cụm giữa
+                    [9, 10].map(c => r+c)               // Cụm phải
+                ]),
+                // Khai báo hàng J (Ghế đôi)
+                ['J1'], ['J2', 'J3', 'J4'], ['J5']
+            ];
+
+            // Quét qua từng cụm ghế
+            for (const block of blocks) {
+                // Ánh xạ trạng thái của cụm: 'S' (Đã chọn), 'B' (Đã bán), 'E' (Trống)
+                let states = block.map(seatId => {
+                    const el = document.querySelector(`[data-seat="${seatId}"]`);
+                    if (!el) return 'B'; // Không có trên HTML coi như đã bán
+                    if (el.classList.contains('selected')) return 'S';
+                    if (el.classList.contains('booked')) return 'B';
+                    return 'E';
+                });
+
+                // Tìm các khoảng trống (những chữ 'E' đứng cạnh nhau)
+                let eGroups = [];
+                let currentGroup = [];
+                for (let i = 0; i < states.length; i++) {
+                    if (states[i] === 'E') {
+                        currentGroup.push(i);
+                    } else {
+                        if (currentGroup.length > 0) {
+                            eGroups.push(currentGroup);
+                            currentGroup = [];
+                        }
+                    }
+                }
+                if (currentGroup.length > 0) eGroups.push(currentGroup);
+
+                // Nếu có 1 khoảng trống chỉ có ĐÚNG 1 GHẾ (length === 1)
+                for (const group of eGroups) {
+                    if (group.length === 1) {
+                        const index = group[0];
+                        // Kiểm tra xem ghế bên trái và bên phải của nó là gì
+                        const leftState = index > 0 ? states[index-1] : 'edge';
+                        const rightState = index < states.length - 1 ? states[index+1] : 'edge';
+                        
+                        // Nếu ghế trống đó nằm cạnh một ghế MÀ NGƯỜI DÙNG VỪA CHỌN ('S') => Cảnh báo lỗi
+                        if (leftState === 'S' || rightState === 'S') {
+                            return true; 
+                        }
+                    }
+                }
+            }
+            return false; // Không có lỗi
+        }
+
+        // Sự kiện Click chọn ghế
         seats.forEach(seat => {
             seat.addEventListener('click', () => {
                 const seatId = seat.getAttribute('data-seat');
@@ -264,14 +326,28 @@ $price_couple = 230000; // Giá ghế đôi
             });
         });
 
+        // Hàm cập nhật giao diện
         function updateSummary() {
-            // Sắp xếp ghế theo ABC
             selectedSeatsArr.sort();
 
+            // Kích hoạt thuật toán kiểm tra lỗi
+            const isOrphan = checkOrphanSeats();
+            const orphanWarning = document.getElementById('orphanWarning');
+
+            // Ẩn/Hiện bảng cảnh báo
+            if (isOrphan) {
+                orphanWarning.classList.remove('hidden');
+            } else {
+                orphanWarning.classList.add('hidden');
+            }
+
+            // Xử lý nút thanh toán
             if (selectedSeatsArr.length > 0) {
                 selectedSeatsText.textContent = selectedSeatsArr.join(', ');
                 inputSeats.value = selectedSeatsArr.join(', ');
-                btnSubmit.disabled = false;
+                
+                // NẾU CÓ LỖI CHỪA 1 GHẾ -> KHÓA NÚT THANH TOÁN
+                btnSubmit.disabled = isOrphan;
             } else {
                 selectedSeatsText.textContent = 'Chưa chọn ghế';
                 inputSeats.value = '';

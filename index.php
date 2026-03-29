@@ -225,11 +225,14 @@ if (isset($_SESSION["user_logged_in"]) && $_SESSION["role"] !== 'admin') {
         <?php if (!empty($top_movies) && !$is_filtering && empty($view_all)): ?>
         <section class="relative w-full h-[80vh] min-h-[600px] mt-0 overflow-hidden bg-background-dark" id="banner-slider">
             
-            <?php foreach ($top_movies as $index => $movie): ?>
+            <?php foreach ($top_movies as $index => $movie): 
+                // THUẬT TOÁN ƯU TIÊN ẢNH NGANG: Tìm banner_url, nếu không có mới dùng poster_url
+                $bg_image = !empty($movie['banner_url']) ? $movie['banner_url'] : $movie['poster_url'];
+            ?>
                 <div class="slide absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out <?php echo $index === 0 ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'; ?>" data-index="<?php echo $index; ?>">
                     
                     <div class="absolute inset-0 w-full h-full">
-                        <img src="<?php echo htmlspecialchars($movie['poster_url']); ?>" alt="Banner" class="w-full h-full object-cover" style="object-position: center 25%;">
+                        <img src="<?php echo htmlspecialchars($bg_image); ?>" alt="Banner" class="w-full h-full object-cover object-center">
                         <div class="absolute inset-0 hero-gradient"></div>
                     </div>
 
