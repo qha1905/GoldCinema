@@ -31,30 +31,24 @@ $stmt_shows->execute([$movie_id]);
 $showtimes = $stmt_shows->fetchAll();
 
 // ==============================================================
-// ĐÃ FIX LỖI: LẤY THÊM TÊN PHÒNG ĐỂ TRÁNH TRÙNG LẶP SỐ VÉ GIỮA CÁC RẠP
+// ĐÃ FIX LỖI: LẤY THÊM ID RẠP (CINEMA_ID) ĐỂ TRÁNH TRÙNG LẶP CHÉO
 // ==============================================================
-$stmt_booked = $pdo->prepare("SELECT show_time, room_name, seat_numbers FROM orders WHERE movie_id = ? AND status = 'completed'");
+$stmt_booked = $pdo->prepare("SELECT cinema_id, show_time, room_name, seat_numbers FROM orders WHERE movie_id = ? AND status = 'completed'");
 $stmt_booked->execute([$movie_id]);
 $all_orders = $stmt_booked->fetchAll();
 
 $booked_counts = [];
 foreach ($all_orders as $order) {
-    // TẠO KEY DUY NHẤT = GIỜ CHIẾU + TÊN PHÒNG
-    $time_room_key = trim($order['show_time']) . '|' . trim($order['room_name']); 
+    // TẠO KEY DUY NHẤT = ID RẠP + GIỜ CHIẾU + TÊN PHÒNG
+    $time_room_key = $order['cinema_id'] . '|' . trim($order['show_time']) . '|' . trim($order['room_name']); 
     
-    if (!isset($booked_counts[$time_room_key])) {
-        $booked_counts[$time_room_key] = 0;
-    }
-    // Đếm số lượng ghế (Ghế J là ghế đôi -> tính 2 chỗ/người)
+    if (!isset($booked_counts[$time_room_key])) $booked_counts[$time_room_key] = 0;
+    
+    // Đếm số lượng ghế (Ghế J tính 2 chỗ)
     $seats = array_filter(explode(',', $order['seat_numbers']));
     foreach ($seats as $seat) {
-        $seat_name = trim($seat);
-        // Nếu tên ghế bắt đầu bằng chữ 'J' thì cộng 2
-        if (strpos($seat_name, 'J') === 0) {
-            $booked_counts[$time_room_key] += 2;
-        } else {
-            $booked_counts[$time_room_key] += 1;
-        }
+        if (strpos(trim($seat), 'J') === 0) $booked_counts[$time_room_key] += 2;
+        else $booked_counts[$time_room_key] += 1;
     }
 }
 
@@ -138,8 +132,8 @@ foreach ($showtimes as $show) {
                                             $room = $show['room_name'] ?? 'Phòng Tiêu Chuẩn';
                                             $full_show_time = $time . ', ' . date('d/m/Y', strtotime($date));
                                             
-                                            // TÍNH TOÁN SỐ GHẾ TRỐNG DỰA TRÊN CẢ GIỜ VÀ TÊN PHÒNG
-                                            $check_key = $full_show_time . '|' . trim($room);
+                                            // TÍNH TOÁN SỐ GHẾ TRỐNG DỰA TRÊN ID RẠP + GIỜ VÀ TÊN PHÒNG
+                                            $check_key = $show['cinema_id'] . '|' . $full_show_time . '|' . trim($room);
                                             $booked_seats = $booked_counts[$check_key] ?? 0;
                                             
                                             $total_seats = 100; // Cố định 40 ghế/phòng

@@ -10,6 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['selected_seats'])) {
 
 // 1. Lấy dữ liệu từ form chọn ghế
 $movie_id = $_POST['movie_id'] ?? 0;
+// ĐÃ THÊM: Hứng ID rạp từ trang chọn ghế
+$cinema_id = $_POST['cinema_id'] ?? 0; 
 $show_time = $_POST['show_time'] ?? '';
 $room_name = $_POST['room_name'] ?? '';
 $selected_seats = $_POST['selected_seats'] ?? '';
@@ -169,11 +171,13 @@ $total_price = $ticket_price + $convenience_fee;
                             </div>
                         </div>
 
-                        <input type="hidden" name="movie_id" value="<?php echo $movie_id; ?>">
+                        <input type="hidden" name="cinema_id" value="<?php echo htmlspecialchars($cinema_id); ?>">
+                        
+                        <input type="hidden" name="movie_id" value="<?php echo htmlspecialchars($movie_id); ?>">
                         <input type="hidden" name="show_time" value="<?php echo htmlspecialchars($show_time); ?>">
                         <input type="hidden" name="room_name" value="<?php echo htmlspecialchars($room_name); ?>">
                         <input type="hidden" name="selected_seats" value="<?php echo htmlspecialchars($selected_seats); ?>">
-                        <input type="hidden" name="total_price" id="inputFinalTotal" value="<?php echo $total_price; ?>">
+                        <input type="hidden" name="total_price" id="inputFinalTotal" value="<?php echo htmlspecialchars($total_price); ?>">
 
                         <button type="submit" class="w-full bg-primary text-background-dark py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-[0_4px_14px_0_rgba(242,204,13,0.39)]">
                             Xác nhận thanh toán
@@ -215,11 +219,11 @@ $total_price = $ticket_price + $convenience_fee;
 
             // Cập nhật lại ảnh QR Code với số tiền mới
             const qrImage = document.getElementById('vietqrImage');
-            qrImage.style.opacity = '0.5'; // Hiệu ứng mờ đi khi đang load ảnh mới
+            qrImage.style.opacity = '0.5'; 
             const newQrUrl = `https://img.vietqr.io/image/${bankId}-${accNo}-compact2.png?amount=${currentTotal}&addInfo=${addInfo}&accountName=${accName}`;
             
             qrImage.src = newQrUrl;
-            qrImage.onload = () => { qrImage.style.opacity = '1'; } // Sáng lại khi load xong
+            qrImage.onload = () => { qrImage.style.opacity = '1'; }
         }
 
         // Xử lý áp dụng mã giảm giá
@@ -243,22 +247,15 @@ $total_price = $ticket_price + $convenience_fee;
                 return;
             }
 
-            // Demo logic: Nếu mã là GOLDCINEMA giảm 50k
             if (inputCode === 'GOLDCINEMA' || inputCode === 'VIP10') {
                 let discountAmt = 50000;
-                
-                // Đảm bảo không giảm âm tiền
                 if (currentTotal < discountAmt) discountAmt = currentTotal;
-
                 currentTotal -= discountAmt;
                 isPromoApplied = true;
 
-                // Cập nhật UI
                 msgObj.textContent = "Áp dụng mã giảm giá thành công!";
                 msgObj.className = "text-sm mt-2 text-green-500 font-bold";
-                
                 document.getElementById('promoCode').disabled = true;
-                
                 discountRow.classList.remove('hidden');
                 discountValue.textContent = "-" + new Intl.NumberFormat('vi-VN').format(discountAmt) + 'đ';
 

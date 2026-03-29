@@ -59,27 +59,21 @@ $stmt->execute($params);
 $showtimes = $stmt->fetchAll();
 
 // ==============================================================
-// 5. THỐNG KÊ SỐ LƯỢNG GHẾ ĐÃ ĐẶT TỪ BẢNG ORDERS
+// 5. THỐNG KÊ SỐ LƯỢNG GHẾ ĐÃ ĐẶT TỪ BẢNG ORDERS (ĐÃ FIX LỖI CINEMA_ID)
 // ==============================================================
-$stmt_orders = $pdo->query("SELECT movie_id, show_time, room_name, seat_numbers FROM orders WHERE status = 'completed'");
+$stmt_orders = $pdo->query("SELECT cinema_id, movie_id, show_time, room_name, seat_numbers FROM orders WHERE status = 'completed'");
 $orders_data = $stmt_orders->fetchAll();
 
 $booked_counts = [];
 foreach ($orders_data as $od) {
-    // SỬA Ở ĐÂY: Thêm Tên phòng vào để tạo Key phân biệt giữa các rạp
-    $key = $od['movie_id'] . '_' . trim($od['show_time']) . '_' . trim($od['room_name']);
-    if (!isset($booked_counts[$key])) {
-        $booked_counts[$key] = 0;
-    }
-    // Đếm số lượng ghế (Ghế J là ghế đôi -> tính 2 chỗ/người)
+    // SỬA Ở ĐÂY: Thêm ID Rạp vào đầu Key để phân biệt rạch ròi
+    $key = $od['cinema_id'] . '_' . $od['movie_id'] . '_' . trim($od['show_time']) . '_' . trim($od['room_name']);
+    if (!isset($booked_counts[$key])) $booked_counts[$key] = 0;
+    
     $seats = array_filter(explode(',', $od['seat_numbers']));
     foreach ($seats as $seat) {
-        $seat_name = trim($seat);
-        if (strpos($seat_name, 'J') === 0) {
-            $booked_counts[$key] += 2;
-        } else {
-            $booked_counts[$key] += 1;
-        }
+        if (strpos(trim($seat), 'J') === 0) $booked_counts[$key] += 2;
+        else $booked_counts[$key] += 1;
     }
 }
 ?>
@@ -183,9 +177,9 @@ foreach ($orders_data as $od) {
                         </thead>
                         <tbody class="divide-y divide-accent-dark/50">
                             <?php foreach ($showtimes as $st): 
-                                // SỬA Ở ĐÂY: Thêm room_name vào để match với Key ở trên
+                                // SỬA Ở ĐÂY: Thêm ID Rạp vào biến Key
                                 $time_str = date('H:i', strtotime($st['start_time'])) . ', ' . date('d/m/Y', strtotime($st['show_date']));
-                                $key = $st['movie_id'] . '_' . $time_str . '_' . trim($st['room_name']);
+                                $key = $st['cinema_id'] . '_' . $st['movie_id'] . '_' . $time_str . '_' . trim($st['room_name']);
                                 
                                 $total_seats = 100; // Cố định 40 ghế / phòng
                                 $booked_seats = $booked_counts[$key] ?? 0;

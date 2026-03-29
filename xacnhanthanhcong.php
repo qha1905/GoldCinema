@@ -12,6 +12,10 @@ if (!isset($_SESSION["user_logged_in"]) || $_SESSION["user_logged_in"] !== true)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_id = $_SESSION["user_id"];
     $movie_id = $_POST['movie_id'];
+    
+    // ĐÃ THÊM: Hứng ID Rạp chiếu từ trang thanh toán
+    $cinema_id = $_POST['cinema_id'] ?? 0; 
+    
     $selected_seats = $_POST['selected_seats'];
     $total_price = $_POST['total_price'];
     
@@ -24,15 +28,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $room_name = $_POST['room_name'] ?? "Đang cập nhật";
 
     try {
-        // 1. Lưu đơn hàng vào Database
-        $sql = "INSERT INTO orders (user_id, movie_id, show_time, room_name, seat_numbers, total_price, payment_method, status) 
-                VALUES (:user_id, :movie_id, :show_time, :room_name, :seat_numbers, :total_price, :payment_method, 'completed')";
+        // 1. Lưu đơn hàng vào Database (ĐÃ THÊM cinema_id vào câu lệnh INSERT)
+        $sql = "INSERT INTO orders (user_id, movie_id, cinema_id, show_time, room_name, seat_numbers, total_price, payment_method, status) 
+                VALUES (:user_id, :movie_id, :cinema_id, :show_time, :room_name, :seat_numbers, :total_price, :payment_method, 'completed')";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
             ':user_id' => $user_id,
             ':movie_id' => $movie_id,
+            ':cinema_id' => $cinema_id, // Truyền ID rạp vào CSDL
             ':show_time' => $show_time,
-            ':room_name' => $room_name, // Thêm dòng này để lưu tên phòng
+            ':room_name' => $room_name, 
             ':seat_numbers' => $selected_seats,
             ':total_price' => $total_price,
             ':payment_method' => $payment_method
@@ -43,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Tạo mã vé đẹp dạng CGV0000001
         $order_code = "CGV" . str_pad($order_id, 8, "0", STR_PAD_LEFT);
 
-        // THÊM ĐOẠN NÀY: Tạo link kiểm tra vé tự động bắt theo tên miền của bạn (localhost hoặc domain thật)
+        // Tạo link kiểm tra vé tự động bắt theo tên miền của bạn (localhost hoặc domain thật)
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
         $domain = $_SERVER['HTTP_HOST'];
         $verify_url = $protocol . "://" . $domain . dirname($_SERVER['PHP_SELF']) . "/kiemtra_ve.php?code=" . $order_code;

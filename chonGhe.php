@@ -23,22 +23,26 @@ if (!$movie) {
     die("Không tìm thấy phim!");
 }
 
-// 3. Lấy tên rạp dựa vào suất chiếu
+// 3. ĐÃ FIX: Lấy tên rạp VÀ ID RẠP dựa vào suất chiếu
 $cinema_name = "Hệ thống Rạp";
+$cinema_id = 0; // Biến lưu ID rạp
 if ($show_id) {
     $stmt_cinema = $pdo->prepare("
-        SELECT c.name FROM showtimes s 
+        SELECT c.id, c.name FROM showtimes s 
         JOIN cinemas c ON s.cinema_id = c.id 
         WHERE s.id = ?
     ");
     $stmt_cinema->execute([$show_id]);
-    $c_name = $stmt_cinema->fetchColumn();
-    if ($c_name) $cinema_name = $c_name;
+    $c_data = $stmt_cinema->fetch();
+    if ($c_data) {
+        $cinema_name = $c_data['name'];
+        $cinema_id = $c_data['id']; // Lấy ID rạp
+    }
 }
 
-// 4. LẤY DANH SÁCH GHẾ ĐÃ ĐẶT
-$stmt_booked = $pdo->prepare("SELECT seat_numbers FROM orders WHERE movie_id = ? AND show_time = ? AND room_name = ? AND status = 'completed'");
-$stmt_booked->execute([$movie_id, $show_time_get, $room_name_get]);
+// 4. ĐÃ FIX: LẤY DANH SÁCH GHẾ ĐÃ ĐẶT (Chỉ lấy ghế của Rạp đang chọn)
+$stmt_booked = $pdo->prepare("SELECT seat_numbers FROM orders WHERE movie_id = ? AND cinema_id = ? AND show_time = ? AND room_name = ? AND status = 'completed'");
+$stmt_booked->execute([$movie_id, $cinema_id, $show_time_get, $room_name_get]);
 $booked_rows = $stmt_booked->fetchAll();
 
 $booked_seats = [];
@@ -218,7 +222,9 @@ $price_couple = 230000; // Giá ghế đôi
                     <p id="totalPriceText" class="text-2xl font-black text-primary">0đ</p>
                 </div>
 
-                <input type="hidden" name="movie_id" value="<?php echo $movie_id; ?>">
+                <input type="hidden" name="cinema_id" value="<?php echo htmlspecialchars($cinema_id); ?>">
+                
+                <input type="hidden" name="movie_id" value="<?php echo htmlspecialchars($movie_id); ?>">
                 <input type="hidden" name="show_time" value="<?php echo htmlspecialchars($show_time_get); ?>">
                 <input type="hidden" name="room_name" value="<?php echo htmlspecialchars($room_name_get); ?>">
                 <input type="hidden" name="selected_seats" id="inputSeats" value="">
