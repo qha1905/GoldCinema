@@ -2,7 +2,7 @@
 session_start();
 require_once 'includes/db_connect.php';
 
-// 1. TÌM PHIM BÁN CHẠY NHẤT LÀM BANNER (Top 1)
+// 1. TÌM 5 PHIM BÁN CHẠY NHẤT LÀM BANNER (Top 5)
 $stmt_top = $pdo->query("
     SELECT m.*, 
            COALESCE(SUM(IF(o.seat_numbers IS NULL OR o.seat_numbers = '', 0, LENGTH(o.seat_numbers) - LENGTH(REPLACE(o.seat_numbers, ',', '')) + 1)), 0) as tickets_sold
@@ -11,9 +11,9 @@ $stmt_top = $pdo->query("
     WHERE m.status = 'now_showing'
     GROUP BY m.id 
     ORDER BY tickets_sold DESC 
-    LIMIT 1
+    LIMIT 5
 ");
-$top_movie = $stmt_top->fetch();
+$top_movies = $stmt_top->fetchAll();
 
 // 2. LẤY DANH SÁCH RẠP CHO MENU DROPDOWN
 $stmt_cinemas = $pdo->query("SELECT id, name FROM cinemas WHERE status = 'active' ORDER BY name ASC");
@@ -222,30 +222,63 @@ if (isset($_SESSION["user_logged_in"]) && $_SESSION["role"] !== 'admin') {
 
     <main class="flex-1 flex flex-col">
         
-        <?php if ($top_movie && !$is_filtering && empty($view_all)): ?>
-        <section class="relative w-full h-[80vh] min-h-[600px] flex items-center mt-0">
-            <div class="absolute inset-0 w-full h-full">
-                <img src="<?php echo htmlspecialchars($top_movie['poster_url']); ?>" alt="Banner" class="w-full h-full object-cover" style="object-position: center 25%;">
-                <div class="absolute inset-0 hero-gradient"></div>
-            </div>
+        <?php if (!empty($top_movies) && !$is_filtering && empty($view_all)): ?>
+        <section class="relative w-full h-[80vh] min-h-[600px] mt-0 overflow-hidden bg-background-dark" id="banner-slider">
+            
+            <?php foreach ($top_movies as $index => $movie): ?>
+                <div class="slide absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out <?php echo $index === 0 ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'; ?>" data-index="<?php echo $index; ?>">
+                    
+                    <div class="absolute inset-0 w-full h-full">
+                        <img src="<?php echo htmlspecialchars($movie['poster_url']); ?>" alt="Banner" class="w-full h-full object-cover" style="object-position: center 25%;">
+                        <div class="absolute inset-0 hero-gradient"></div>
+                    </div>
 
-            <div class="relative z-10 max-w-7xl mx-auto w-full px-6 flex flex-col justify-center mt-20">
-                <span class="bg-primary text-background-dark text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit mb-4">Top 1 Doanh Thu</span>
-                <h1 class="text-5xl md:text-7xl font-black text-white mb-4 uppercase tracking-tighter drop-shadow-2xl max-w-3xl leading-none">
-                    <?php echo htmlspecialchars($top_movie['title']); ?>
-                </h1>
-                <p class="text-slate-300 text-base md:text-lg max-w-xl mb-8 line-clamp-3 drop-shadow-md">
-                    <?php echo htmlspecialchars($top_movie['description']); ?>
-                </p>
-                <div class="flex items-center gap-4">
-                    <a href="chon_suat.php?id=<?php echo $top_movie['id']; ?>" class="bg-primary text-background-dark px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-2 hover:bg-primary/90 transition-all shadow-[0_4px_14px_0_rgba(242,204,13,0.4)] active:scale-95">
-                        <span class="material-symbols-outlined">confirmation_number</span> ĐẶT VÉ NGAY
-                    </a>
-                    <button onclick="openTrailerModal('<?php echo htmlspecialchars($top_movie['trailer_url'] ?? ''); ?>')" class="border-2 border-slate-300 text-slate-100 hover:border-primary hover:text-primary px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-2 transition-all bg-background-dark/30 backdrop-blur-sm active:scale-95 group">
-                        <span class="material-symbols-outlined group-hover:text-primary transition-colors">play_circle</span> Xem Trailer
-                    </button>
+                    <div class="absolute inset-0 w-full h-full flex items-center">
+                        <div class="relative z-20 max-w-7xl mx-auto w-full px-6 flex flex-col justify-center mt-10 md:mt-20">
+                            
+                            <span class="bg-primary text-background-dark text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit mb-4 shadow-lg shadow-primary/20">
+                                Top <?php echo $index + 1; ?> Doanh Thu
+                            </span>
+                            
+                            <h1 class="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-3 uppercase tracking-tighter drop-shadow-2xl max-w-3xl leading-tight">
+                                <?php echo htmlspecialchars($movie['title']); ?>
+                            </h1>
+
+                            <div class="flex flex-wrap items-center gap-3 mb-4 text-xs md:text-sm font-bold text-slate-200">
+                                <span class="bg-surface-dark/60 backdrop-blur-md border border-border-dark px-3 py-1.5 rounded-lg text-primary">
+                                    <?php echo htmlspecialchars($movie['genre'] ?? 'Đang cập nhật'); ?>
+                                </span>
+                                <span class="flex items-center gap-1 bg-surface-dark/60 backdrop-blur-md border border-border-dark px-3 py-1.5 rounded-lg">
+                                    <span class="material-symbols-outlined text-[16px] md:text-[18px] text-primary">schedule</span> <?php echo htmlspecialchars($movie['duration'] ?? '120'); ?> phút
+                                </span>
+                            </div>
+                            
+                            <p class="text-slate-300 text-sm md:text-base lg:text-lg max-w-xl mb-8 line-clamp-3 drop-shadow-md">
+                                <?php echo htmlspecialchars($movie['description']); ?>
+                            </p>
+                            
+                            <div class="flex flex-wrap items-center gap-4">
+                                <a href="chon_suat.php?id=<?php echo $movie['id']; ?>" class="bg-primary text-background-dark px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-base md:text-lg flex items-center gap-2 hover:bg-primary/90 transition-all shadow-[0_4px_14px_0_rgba(242,204,13,0.4)] active:scale-95">
+                                    <span class="material-symbols-outlined">confirmation_number</span> ĐẶT VÉ NGAY
+                                </a>
+                                <button onclick="openTrailerModal('<?php echo htmlspecialchars($movie['trailer_url'] ?? ''); ?>')" class="border-2 border-slate-300 text-slate-100 hover:border-primary hover:text-primary px-6 md:px-8 py-3 md:py-4 rounded-xl font-bold text-base md:text-lg flex items-center gap-2 transition-all bg-background-dark/30 backdrop-blur-sm active:scale-95 group">
+                                    <span class="material-symbols-outlined group-hover:text-primary transition-colors">play_circle</span> Xem Trailer
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
+            <?php endforeach; ?>
+
+            <?php if (count($top_movies) > 1): ?>
+            <div class="absolute bottom-24 md:bottom-28 left-0 right-0 z-30 flex justify-center gap-3">
+                <?php foreach ($top_movies as $index => $movie): ?>
+                    <button onclick="goToSlide(<?php echo $index; ?>)" class="dot h-2.5 rounded-full transition-all duration-300 shadow-md <?php echo $index === 0 ? 'bg-primary w-8' : 'bg-slate-400/50 w-2.5 hover:bg-slate-200'; ?>"></button>
+                <?php endforeach; ?>
             </div>
+            <?php endif; ?>
+
         </section>
         <?php else: ?>
         <div class="h-28"></div> <?php endif; ?>
@@ -473,6 +506,59 @@ if (isset($_SESSION["user_logged_in"]) && $_SESSION["role"] !== 'admin') {
                 modal.classList.remove('flex');
                 iframe.src = ''; // CỰC KỲ QUAN TRỌNG: Xóa src để dừng tiếng video
             }, 300);
+        }
+
+        // LOGIC CHẠY SLIDER BANNER TỰ ĐỘNG
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.dot');
+        const totalSlides = slides.length;
+        let slideInterval;
+
+        function updateSlider(index) {
+            if (totalSlides === 0) return;
+            
+            // Xóa trạng thái active của tất cả slide và dot
+            slides.forEach(slide => {
+                slide.classList.remove('opacity-100', 'z-10', 'pointer-events-auto');
+                slide.classList.add('opacity-0', 'z-0', 'pointer-events-none');
+            });
+            dots.forEach(dot => {
+                dot.classList.remove('bg-primary', 'w-8');
+                dot.classList.add('bg-slate-500/50', 'w-2.5');
+            });
+
+            // Gắn trạng thái active cho slide hiện tại (Hiệu ứng Fade-in mượt mà)
+            slides[index].classList.remove('opacity-0', 'z-0', 'pointer-events-none');
+            slides[index].classList.add('opacity-100', 'z-10', 'pointer-events-auto');
+            
+            if(dots[index]) {
+                dots[index].classList.remove('bg-slate-500/50', 'w-2.5');
+                dots[index].classList.add('bg-primary', 'w-8');
+            }
+            
+            currentSlide = index;
+        }
+
+        function nextSlide() {
+            let next = (currentSlide + 1) % totalSlides;
+            updateSlider(next);
+        }
+
+        // Chuyển slide khi người dùng bấm vào dấu chấm
+        function goToSlide(index) {
+            updateSlider(index);
+            resetInterval(); // Reset lại thời gian để không bị chuyển quá nhanh
+        }
+
+        // Tự động chuyển slide mỗi 5 giây
+        function resetInterval() {
+            clearInterval(slideInterval);
+            slideInterval = setInterval(nextSlide, 5000); 
+        }
+
+        if (totalSlides > 1) {
+            resetInterval();
         }
     </script>
 
