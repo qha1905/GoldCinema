@@ -43,6 +43,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ':payment_method' => $payment_method
         ]);
 
+        // KIỂM TRA VÀ CỘNG LƯỢT SỬ DỤNG VOUCHER (NẾU CÓ)
+        $applied_promo_code = $_POST['applied_promo_code'] ?? '';
+        if (!empty($applied_promo_code)) {
+            $stmt_voucher = $pdo->prepare("UPDATE vouchers SET used_count = used_count + 1 WHERE code = ?");
+            $stmt_voucher->execute([$applied_promo_code]);
+        }
+
         // 2. Lấy ID đơn hàng vừa tạo để làm Mã vé
         $order_id = $pdo->lastInsertId();
         // Tạo mã vé đẹp dạng CGV0000001
@@ -58,6 +65,78 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt_movie = $pdo->prepare("SELECT * FROM movies WHERE id = :id");
         $stmt_movie->execute(['id' => $movie_id]);
         $movie = $stmt_movie->fetch();
+
+        // 4. LẤY EMAIL CỦA KHÁCH HÀNG TỪ DATABASE
+        $stmt_user = $pdo->prepare("SELECT email FROM users WHERE id = ?");
+        $stmt_user->execute([$user_id]);
+        $user_email = $stmt_user->fetchColumn();
+
+        // =========================================================
+        // 5. GỬI EMAIL TỰ ĐỘNG BẰNG PHPMAILER
+        // =========================================================
+        if ($user_email) {
+            require 'includes/PHPMailer/Exception.php';
+            require 'includes/PHPMailer/PHPMailer.php';
+            require 'includes/PHPMailer/SMTP.php';
+
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+
+            try {
+                // Cấu hình Server (Thay thông tin của bạn vào đây)
+                $mail->isSMTP();
+                $mail->Host       = 'smtp.gmail.com';
+                $mail->SMTPAuth   = true;
+                $mail->Username   = 'qha1905@gmail.com'; // Nhập email của bạn
+                $mail->Password   = 'fore smdu fpsu mciy'; // Dán mật khẩu bước 1 vào đây
+                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+                $mail->Port       = 465;
+                $mail->CharSet    = 'UTF-8';
+
+                // Người gửi & Người nhận
+                $mail->setFrom('qha1905@gmail.com', 'Gold Cinema');
+                $mail->addAddress($user_email, $_SESSION['user_name']);
+
+                // Nội dung Email (Viết HTML cho đẹp)
+                $mail->isHTML(true);
+                $mail->Subject = 'Xác nhận đặt vé thành công - ' . $movie['title'];
+                
+                $email_body = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 10px; overflow: hidden;'>
+                    <div style='background-color: #1a180a; padding: 20px; text-align: center;'>
+                        <h1 style='color: #f2cc0d; margin: 0;'>GOLD CINEMA</h1>
+                    </div>
+                    <div style='padding: 20px;'>
+                        <h2>Xin chào " . htmlspecialchars($_SESSION['user_name']) . ",</h2>
+                        <p>Cảm ơn bạn đã đặt vé tại Gold Cinema. Dưới đây là thông tin vé điện tử của bạn:</p>
+                        
+                        <div style='background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 15px;'>
+                            <h3 style='margin-top: 0; color: #d32f2f;'>" . htmlspecialchars($movie['title']) . "</h3>
+                            <p><strong>Mã đơn hàng:</strong> #$order_code</p>
+                            <p><strong>Phòng chiếu:</strong> $room_name</p>
+                            <p><strong>Ghế:</strong> <span style='color: #d32f2f; font-weight: bold;'>$selected_seats</span></p>
+                            <p><strong>Thời gian:</strong> $show_time</p>
+                            <hr style='border: 0; border-top: 1px dashed #ccc; margin: 15px 0;'/>
+                            <p><strong>Tổng tiền:</strong> " . number_format($total_price, 0, ',', '.') . " VNĐ</p>
+                        </div>
+
+                        <div style='text-align: center; margin-top: 20px;'>
+                            <p>Vui lòng đưa mã QR này cho nhân viên khi đến rạp:</p>
+                            <img src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=$qr_data' alt='QR Code' />
+                        </div>
+                    </div>
+                    <div style='background-color: #f1f1f1; padding: 15px; text-align: center; font-size: 12px; color: #666;'>
+                        Gold Cinema - Trải nghiệm điện ảnh đẳng cấp<br>
+                        Hotline: 1900 1000
+                    </div>
+                </div>";
+
+                $mail->Body = $email_body;
+                $mail->send();
+            } catch (Exception $e) {
+                // Lỗi gửi mail nhưng vé vẫn được đặt thành công, ta chỉ log lỗi ra chứ không chặn luồng
+                error_log("Lỗi gửi Email: {$mail->ErrorInfo}");
+            }
+        }
 
     } catch (PDOException $e) {
         die("Lỗi xử lý đơn hàng: " . $e->getMessage());

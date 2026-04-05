@@ -178,6 +178,7 @@ $total_price = $ticket_price + $convenience_fee;
                         <input type="hidden" name="room_name" value="<?php echo htmlspecialchars($room_name); ?>">
                         <input type="hidden" name="selected_seats" value="<?php echo htmlspecialchars($selected_seats); ?>">
                         <input type="hidden" name="total_price" id="inputFinalTotal" value="<?php echo htmlspecialchars($total_price); ?>">
+                        <input type="hidden" name="applied_promo_code" id="inputAppliedPromo" value="">
 
                         <button type="submit" class="w-full bg-primary text-background-dark py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-[0_4px_14px_0_rgba(242,204,13,0.39)]">
                             Xác nhận thanh toán
@@ -226,8 +227,8 @@ $total_price = $ticket_price + $convenience_fee;
             qrImage.onload = () => { qrImage.style.opacity = '1'; }
         }
 
-        // Xử lý áp dụng mã giảm giá
-        function applyPromo() {
+        // Xử lý áp dụng mã giảm giá bằng AJAX (Fetch API)
+        async function applyPromo() {
             const inputCode = document.getElementById('promoCode').value.trim().toUpperCase();
             const msgObj = document.getElementById('promoMessage');
             const discountRow = document.getElementById('discountRow');
@@ -247,21 +248,51 @@ $total_price = $ticket_price + $convenience_fee;
                 return;
             }
 
-            if (inputCode === 'GOLDCINEMA' || inputCode === 'VIP10') {
-                let discountAmt = 50000;
-                if (currentTotal < discountAmt) discountAmt = currentTotal;
-                currentTotal -= discountAmt;
-                isPromoApplied = true;
+            // Giao diện: Đang xử lý
+            msgObj.textContent = "Đang kiểm tra mã...";
+            msgObj.className = "text-sm mt-2 text-slate-400";
 
-                msgObj.textContent = "Áp dụng mã giảm giá thành công!";
-                msgObj.className = "text-sm mt-2 text-green-500 font-bold";
-                document.getElementById('promoCode').disabled = true;
-                discountRow.classList.remove('hidden');
-                discountValue.textContent = "-" + new Intl.NumberFormat('vi-VN').format(discountAmt) + 'đ';
+            try {
+                // Đóng gói dữ liệu gửi lên API
+                let formData = new FormData();
+                formData.append('promo_code', inputCode);
+                formData.append('current_total', originalTotal); // Gửi tổng tiền gốc lên kiểm tra
 
-                updateDisplayPrice();
-            } else {
-                msgObj.textContent = "Mã giảm giá không hợp lệ hoặc đã hết hạn.";
+                // Gửi request bằng Fetch API
+                const response = await fetch('check_voucher.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // Xử lý khi mã hợp lệ
+                    let discountAmt = parseInt(result.discount_amount);
+                    if (currentTotal < discountAmt) discountAmt = currentTotal; // Không để âm tiền
+
+                    currentTotal -= discountAmt;
+                    isPromoApplied = true;
+
+                    // THÊM DÒNG NÀY VÀO ĐÂY: Lưu tên mã giảm giá vào form để gửi đi
+                    document.getElementById('inputAppliedPromo').value = inputCode;
+
+                    msgObj.textContent = result.message;
+                    msgObj.className = "text-sm mt-2 text-green-500 font-bold";
+                    document.getElementById('promoCode').disabled = true;
+                    
+                    discountRow.classList.remove('hidden');
+                    discountValue.textContent = "-" + new Intl.NumberFormat('vi-VN').format(discountAmt) + 'đ';
+
+                    updateDisplayPrice(); // Cập nhật lại giao diện và QR Code
+                } else {
+                    // Xử lý khi mã lỗi (hết hạn, sai mã...)
+                    msgObj.textContent = result.message;
+                    msgObj.className = "text-sm mt-2 text-red-500";
+                }
+            } catch (error) {
+                console.error("Lỗi AJAX:", error);
+                msgObj.textContent = "Lỗi kết nối máy chủ, vui lòng thử lại!";
                 msgObj.className = "text-sm mt-2 text-red-500";
             }
         }
