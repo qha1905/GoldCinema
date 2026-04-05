@@ -16,6 +16,8 @@ $show_time = $_POST['show_time'] ?? '';
 $room_name = $_POST['room_name'] ?? '';
 $selected_seats = $_POST['selected_seats'] ?? '';
 $ticket_price = (int)($_POST['total_price'] ?? 0);
+$concessions_data = $_POST['concessions_data'] ?? ''; // Thêm dòng này
+$concessions_price = (int)($_POST['concessions_price'] ?? 0); // Thêm dòng này
 
 // 2. Lấy thông tin phim
 $stmt = $pdo->prepare("SELECT title, poster_url FROM movies WHERE id = ?");
@@ -28,15 +30,15 @@ if (!$movie) {
 
 // 3. Cấu hình thông tin API VietQR
 $bank_id = "TCB";                 // Mã ngân hàng
-$account_no = "393944441111";      // Số tài khoản của bạn
-$account_name = "NGUYEN VAN A";  // Tên chủ thẻ 
+$account_no = "999999999999";      // Số tài khoản của bạn
+$account_name = "NGUYEN LAM QUANG HA";  // Tên chủ thẻ 
 $transfer_content = "Mua vé " . $movie['title'] . " - " . time(); // Nội dung chuyển khoản
 
 // 4. Tính toán
 $seats_array = explode(',', $selected_seats);
 $seat_count = count($seats_array);
 $convenience_fee = 10000; // Phí tiện ích cố định 10.000đ
-$total_price = $ticket_price + $convenience_fee;
+$total_price = $ticket_price + $concessions_price + $convenience_fee;
 
 ?>
 <!DOCTYPE html>
@@ -179,6 +181,9 @@ $total_price = $ticket_price + $convenience_fee;
                         <input type="hidden" name="selected_seats" value="<?php echo htmlspecialchars($selected_seats); ?>">
                         <input type="hidden" name="total_price" id="inputFinalTotal" value="<?php echo htmlspecialchars($total_price); ?>">
                         <input type="hidden" name="applied_promo_code" id="inputAppliedPromo" value="">
+                        <input type="hidden" name="concessions_data" value="<?php echo htmlspecialchars($concessions_data); ?>">
+                        <input type="hidden" name="concessions_price" value="<?php echo htmlspecialchars($concessions_price); ?>">
+                        
 
                         <button type="submit" class="w-full bg-primary text-background-dark py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-[0_4px_14px_0_rgba(242,204,13,0.39)]">
                             Xác nhận thanh toán

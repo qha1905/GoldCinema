@@ -31,6 +31,35 @@ $stmt_shows->execute([$movie_id]);
 $showtimes = $stmt_shows->fetchAll();
 
 // ==============================================================
+// --- XỬ LÝ MODULE ĐÁNH GIÁ (REVIEW) ---
+// ==============================================================
+$can_review = false;
+if (isset($_SESSION["user_logged_in"])) {
+    // Kiểm tra xem khách hàng ĐÃ MUA VÉ phim này chưa
+    $stmt_check = $pdo->prepare("SELECT id FROM orders WHERE user_id = ? AND movie_id = ? AND status = 'completed' LIMIT 1");
+    $stmt_check->execute([$_SESSION["user_id"], $movie_id]);
+    if ($stmt_check->fetch()) $can_review = true;
+
+    // Xử lý khi khách hàng gửi Review
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review'])) {
+        $rating = (int)$_POST['rating'];
+        $comment = trim($_POST['comment']);
+        if ($can_review && $rating >= 1 && $rating <= 5 && !empty($comment)) {
+            $stmt_insert = $pdo->prepare("INSERT INTO reviews (user_id, movie_id, rating, comment) VALUES (?, ?, ?, ?)");
+            $stmt_insert->execute([$_SESSION["user_id"], $movie_id, $rating, $comment]);
+            header("Location: chon_suat.php?id=" . $movie_id . "#reviews-section");
+            exit;
+        }
+    }
+}
+
+// Lấy danh sách tất cả các bình luận của phim này
+$stmt_reviews = $pdo->prepare("SELECT r.*, u.fullname FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.movie_id = ? ORDER BY r.created_at DESC");
+$stmt_reviews->execute([$movie_id]);
+$reviews = $stmt_reviews->fetchAll();
+// ==============================================================
+
+// ==============================================================
 // ĐÃ FIX LỖI: LẤY THÊM ID RẠP (CINEMA_ID) ĐỂ TRÁNH TRÙNG LẶP CHÉO
 // ==============================================================
 $stmt_booked = $pdo->prepare("SELECT cinema_id, show_time, room_name, seat_numbers FROM orders WHERE movie_id = ? AND status = 'completed'");
@@ -136,7 +165,7 @@ foreach ($showtimes as $show) {
                                             $check_key = $show['cinema_id'] . '|' . $full_show_time . '|' . trim($room);
                                             $booked_seats = $booked_counts[$check_key] ?? 0;
                                             
-                                            $total_seats = 100; // Cố định 40 ghế/phòng
+                                            $total_seats = 100; // Cố định 100 ghế/phòng
                                             $available_seats = $total_seats - $booked_seats;
                                             if ($available_seats < 0) $available_seats = 0;
                                             
@@ -174,8 +203,70 @@ foreach ($showtimes as $show) {
                     </div>
                 <?php endif; ?>
             </div>
-
         </div>
-    </main>
+
+        <div id="reviews-section" class="mt-12 border-t border-border-dark pt-12">
+            <h2 class="text-3xl font-black uppercase tracking-tight mb-8 border-l-4 border-primary pl-4">Đánh giá từ khán giả</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                <div class="md:col-span-1">
+                    <?php if ($can_review): ?>
+                        <form method="POST" class="bg-surface-dark border border-border-dark rounded-2xl p-6 sticky top-28 shadow-lg">
+                            <h3 class="font-bold text-primary mb-4">Gửi đánh giá của bạn</h3>
+                            <div class="mb-4">
+                                <label class="text-xs font-bold text-slate-400 block mb-2">Điểm đánh giá (1-5 sao)</label>
+                                <select name="rating" required class="w-full bg-background-dark border border-accent-dark rounded-xl py-2 px-3 text-slate-200 outline-none focus:border-primary">
+                                    <option value="5">⭐⭐⭐⭐⭐ Tuyệt vời</option>
+                                    <option value="4">⭐⭐⭐⭐ Khá hay</option>
+                                    <option value="3">⭐⭐⭐ Bình thường</option>
+                                    <option value="2">⭐⭐ Tệ</option>
+                                    <option value="1">⭐ Rất tệ</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="text-xs font-bold text-slate-400 block mb-2">Cảm nhận của bạn</label>
+                                <textarea name="comment" required rows="3" class="w-full bg-background-dark border border-accent-dark rounded-xl py-2 px-3 text-slate-200 outline-none focus:border-primary placeholder:text-slate-600" placeholder="Bộ phim này thế nào?"></textarea>
+                            </div>
+                            <button type="submit" name="submit_review" class="w-full bg-primary text-background-dark font-bold py-3 rounded-xl hover:bg-primary/90 transition-all">Gửi Đánh Giá</button>
+                        </form>
+                    <?php else: ?>
+                        <div class="bg-background-dark border border-accent-dark rounded-2xl p-6 text-center border-dashed">
+                            <span class="material-symbols-outlined text-4xl text-slate-600 mb-2">verified_user</span>
+                            <p class="text-sm text-slate-400">Chỉ những khách hàng <strong class="text-primary">đã mua vé xem phim này</strong> mới có quyền gửi đánh giá để đảm bảo tính minh bạch.</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="md:col-span-2 space-y-4">
+                    <?php if (count($reviews) > 0): ?>
+                        <?php foreach ($reviews as $rev): ?>
+                            <div class="bg-surface-dark border border-border-dark rounded-xl p-5">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-accent-dark flex items-center justify-center text-primary font-bold">
+                                            <?php echo mb_substr(trim($rev['fullname']), 0, 1, "UTF-8"); ?>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-slate-200 text-sm flex items-center gap-1">
+                                                <?php echo htmlspecialchars($rev['fullname']); ?>
+                                                <span class="material-symbols-outlined text-[14px] text-blue-500" title="Đã mua vé">verified</span>
+                                            </p>
+                                            <p class="text-[10px] text-slate-500"><?php echo date('d/m/Y H:i', strtotime($rev['created_at'])); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="text-primary text-sm tracking-widest">
+                                        <?php echo str_repeat('⭐', $rev['rating']); ?>
+                                    </div>
+                                </div>
+                                <p class="text-slate-300 text-sm mt-3 ml-13 leading-relaxed"><?php echo nl2br(htmlspecialchars($rev['comment'])); ?></p>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="text-slate-500 italic">Chưa có đánh giá nào cho phim này. Hãy là người đầu tiên!</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        </main>
 </body>
 </html>

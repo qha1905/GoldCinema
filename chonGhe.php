@@ -196,7 +196,7 @@ $price_couple = 230000; // Giá ghế đôi
         </div>
 
         <div class="lg:col-span-4">
-            <form id="bookingForm" action="thanhtoan.php" method="POST" class="bg-surface-dark border border-accent-dark rounded-2xl p-6 sticky top-28 shadow-2xl">
+            <form id="bookingForm" action="chonBapNuoc.php" method="POST" class="bg-surface-dark border border-accent-dark rounded-2xl p-6 sticky top-28 shadow-2xl">
                 
                 <div class="flex gap-4 mb-6 pb-6 border-b border-accent-dark">
                     <img src="<?php echo htmlspecialchars($movie['poster_url']); ?>" alt="Poster" class="w-16 h-24 rounded object-cover shadow-md border border-accent-dark">

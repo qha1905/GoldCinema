@@ -13,7 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_id = $_SESSION["user_id"];
     $movie_id = $_POST['movie_id'];
     
-    // ĐÃ THÊM: Hứng ID Rạp chiếu từ trang thanh toán
+    // Hứng ID Rạp chiếu từ trang thanh toán
     $cinema_id = $_POST['cinema_id'] ?? 0; 
     
     $selected_seats = $_POST['selected_seats'];
@@ -28,17 +28,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $room_name = $_POST['room_name'] ?? "Đang cập nhật";
 
     try {
-        // 1. Lưu đơn hàng vào Database (ĐÃ THÊM cinema_id vào câu lệnh INSERT)
-        $sql = "INSERT INTO orders (user_id, movie_id, cinema_id, show_time, room_name, seat_numbers, total_price, payment_method, status) 
-                VALUES (:user_id, :movie_id, :cinema_id, :show_time, :room_name, :seat_numbers, :total_price, :payment_method, 'completed')";
+        // --- BẮT ĐẦU: CẬP NHẬT LƯU BẮP NƯỚC ---
+        $concessions_data = $_POST['concessions_data'] ?? '';
+        $concessions_price = (int)($_POST['concessions_price'] ?? 0);
+
+        // 1. Lưu đơn hàng vào Database (Đã cập nhật câu SQL để thêm 2 cột bắp nước)
+        $sql = "INSERT INTO orders (user_id, movie_id, cinema_id, show_time, room_name, seat_numbers, concessions_data, concessions_price, total_price, payment_method, status) 
+                VALUES (:user_id, :movie_id, :cinema_id, :show_time, :room_name, :seat_numbers, :concessions_data, :concessions_price, :total_price, :payment_method, 'completed')";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
             ':user_id' => $user_id,
             ':movie_id' => $movie_id,
-            ':cinema_id' => $cinema_id, // Truyền ID rạp vào CSDL
+            ':cinema_id' => $cinema_id,
             ':show_time' => $show_time,
             ':room_name' => $room_name, 
             ':seat_numbers' => $selected_seats,
+            ':concessions_data' => $concessions_data,
+            ':concessions_price' => $concessions_price,
             ':total_price' => $total_price,
             ':payment_method' => $payment_method
         ]);
@@ -49,13 +55,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt_voucher = $pdo->prepare("UPDATE vouchers SET used_count = used_count + 1 WHERE code = ?");
             $stmt_voucher->execute([$applied_promo_code]);
         }
+        // --- KẾT THÚC: CẬP NHẬT LƯU BẮP NƯỚC ---
 
         // 2. Lấy ID đơn hàng vừa tạo để làm Mã vé
         $order_id = $pdo->lastInsertId();
         // Tạo mã vé đẹp dạng CGV0000001
         $order_code = "CGV" . str_pad($order_id, 8, "0", STR_PAD_LEFT);
 
-        // Tạo link kiểm tra vé tự động bắt theo tên miền của bạn (localhost hoặc domain thật)
+        // Tạo link kiểm tra vé tự động
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
         $domain = $_SERVER['HTTP_HOST'];
         $verify_url = $protocol . "://" . $domain . dirname($_SERVER['PHP_SELF']) . "/kiemtra_ve.php?code=" . $order_code;
@@ -82,12 +89,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $mail = new PHPMailer\PHPMailer\PHPMailer(true);
 
             try {
-                // Cấu hình Server (Thay thông tin của bạn vào đây)
+                // Cấu hình Server 
                 $mail->isSMTP();
                 $mail->Host       = 'smtp.gmail.com';
                 $mail->SMTPAuth   = true;
-                $mail->Username   = 'qha1905@gmail.com'; // Nhập email của bạn
-                $mail->Password   = 'fore smdu fpsu mciy'; // Dán mật khẩu bước 1 vào đây
+                $mail->Username   = 'qha1905@gmail.com'; 
+                $mail->Password   = 'fore smdu fpsu mciy'; 
                 $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
                 $mail->Port       = 465;
                 $mail->CharSet    = 'UTF-8';
@@ -96,7 +103,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $mail->setFrom('qha1905@gmail.com', 'Gold Cinema');
                 $mail->addAddress($user_email, $_SESSION['user_name']);
 
-                // Nội dung Email (Viết HTML cho đẹp)
+                // Nội dung Email
                 $mail->isHTML(true);
                 $mail->Subject = 'Xác nhận đặt vé thành công - ' . $movie['title'];
                 
@@ -114,7 +121,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <p><strong>Mã đơn hàng:</strong> #$order_code</p>
                             <p><strong>Phòng chiếu:</strong> $room_name</p>
                             <p><strong>Ghế:</strong> <span style='color: #d32f2f; font-weight: bold;'>$selected_seats</span></p>
-                            <p><strong>Thời gian:</strong> $show_time</p>
+                            <p><strong>Thời gian:</strong> $show_time</p>";
+                
+                // In thêm thông tin Bắp nước vào Email nếu có mua
+                if (!empty($concessions_data)) {
+                    $email_body .= "<p><strong>Bắp nước:</strong> <span style='color: #d32f2f;'>$concessions_data</span></p>";
+                }
+
+                $email_body .= "
                             <hr style='border: 0; border-top: 1px dashed #ccc; margin: 15px 0;'/>
                             <p><strong>Tổng tiền:</strong> " . number_format($total_price, 0, ',', '.') . " VNĐ</p>
                         </div>
@@ -133,7 +147,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $mail->Body = $email_body;
                 $mail->send();
             } catch (Exception $e) {
-                // Lỗi gửi mail nhưng vé vẫn được đặt thành công, ta chỉ log lỗi ra chứ không chặn luồng
+                // Lỗi gửi mail nhưng vé vẫn được đặt thành công
                 error_log("Lỗi gửi Email: {$mail->ErrorInfo}");
             }
         }
