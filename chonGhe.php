@@ -100,7 +100,7 @@ $price_couple = 230000; // Giá ghế đôi
 <body class="text-slate-100 min-h-screen flex flex-col">
 
     <header class="h-20 border-b border-border-dark bg-background-dark/80 backdrop-blur-md sticky top-0 z-50 px-6 flex items-center gap-4">
-        <a href="javascript:history.back()" class="flex items-center gap-2 text-primary hover:text-white transition-colors group">
+        <a href="chon_suat.php?id=<?php echo $movie_id; ?>" class="flex items-center gap-2 text-primary hover:text-white transition-colors group">
             <span class="material-symbols-outlined group-hover:-translate-x-1 transition-transform">arrow_back</span>
         </a>
         <h1 class="text-xl font-bold tracking-tight"><?php echo htmlspecialchars($movie['title']); ?></h1>
@@ -223,6 +223,7 @@ $price_couple = 230000; // Giá ghế đôi
                 </div>
 
                 <input type="hidden" name="cinema_id" value="<?php echo htmlspecialchars($cinema_id); ?>">
+                <input type="hidden" name="show_id" value="<?php echo htmlspecialchars($show_id); ?>">
                 
                 <input type="hidden" name="movie_id" value="<?php echo htmlspecialchars($movie_id); ?>">
                 <input type="hidden" name="show_time" value="<?php echo htmlspecialchars($show_time_get); ?>">
@@ -267,16 +268,14 @@ $price_couple = 230000; // Giá ghế đôi
 
             // Quét qua từng cụm ghế
             for (const block of blocks) {
-                // Ánh xạ trạng thái của cụm: 'S' (Đã chọn), 'B' (Đã bán), 'E' (Trống)
                 let states = block.map(seatId => {
                     const el = document.querySelector(`[data-seat="${seatId}"]`);
-                    if (!el) return 'B'; // Không có trên HTML coi như đã bán
+                    if (!el) return 'B'; 
                     if (el.classList.contains('selected')) return 'S';
                     if (el.classList.contains('booked')) return 'B';
                     return 'E';
                 });
 
-                // Tìm các khoảng trống (những chữ 'E' đứng cạnh nhau)
                 let eGroups = [];
                 let currentGroup = [];
                 for (let i = 0; i < states.length; i++) {
@@ -291,25 +290,21 @@ $price_couple = 230000; // Giá ghế đôi
                 }
                 if (currentGroup.length > 0) eGroups.push(currentGroup);
 
-                // Nếu có 1 khoảng trống chỉ có ĐÚNG 1 GHẾ (length === 1)
                 for (const group of eGroups) {
                     if (group.length === 1) {
                         const index = group[0];
-                        // Kiểm tra xem ghế bên trái và bên phải của nó là gì
                         const leftState = index > 0 ? states[index-1] : 'edge';
                         const rightState = index < states.length - 1 ? states[index+1] : 'edge';
                         
-                        // Nếu ghế trống đó nằm cạnh một ghế MÀ NGƯỜI DÙNG VỪA CHỌN ('S') => Cảnh báo lỗi
                         if (leftState === 'S' || rightState === 'S') {
                             return true; 
                         }
                     }
                 }
             }
-            return false; // Không có lỗi
+            return false;
         }
 
-        // Sự kiện Click chọn ghế
         seats.forEach(seat => {
             seat.addEventListener('click', () => {
                 const seatId = seat.getAttribute('data-seat');
@@ -332,27 +327,21 @@ $price_couple = 230000; // Giá ghế đôi
             });
         });
 
-        // Hàm cập nhật giao diện
         function updateSummary() {
             selectedSeatsArr.sort();
 
-            // Kích hoạt thuật toán kiểm tra lỗi
             const isOrphan = checkOrphanSeats();
             const orphanWarning = document.getElementById('orphanWarning');
 
-            // Ẩn/Hiện bảng cảnh báo
             if (isOrphan) {
                 orphanWarning.classList.remove('hidden');
             } else {
                 orphanWarning.classList.add('hidden');
             }
 
-            // Xử lý nút thanh toán
             if (selectedSeatsArr.length > 0) {
                 selectedSeatsText.textContent = selectedSeatsArr.join(', ');
                 inputSeats.value = selectedSeatsArr.join(', ');
-                
-                // NẾU CÓ LỖI CHỪA 1 GHẾ -> KHÓA NÚT THANH TOÁN
                 btnSubmit.disabled = isOrphan;
             } else {
                 selectedSeatsText.textContent = 'Chưa chọn ghế';

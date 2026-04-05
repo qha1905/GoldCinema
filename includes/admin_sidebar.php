@@ -14,7 +14,7 @@ $normal_class = "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 hov
         </div>
     </div>
     
-    <nav class="flex-1 px-4 space-y-2 overflow-y-auto mt-4">
+    <nav class="flex-1 px-4 space-y-2 overflow-y-auto mt-4 custom-scrollbar">
         <a class="<?php echo ($current_page == 'admin_dashboard.php') ? $active_class : $normal_class; ?>" href="admin_dashboard.php">
             <span class="material-symbols-outlined">dashboard</span><span>Dashboard</span>
         </a>
@@ -30,6 +30,14 @@ $normal_class = "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 hov
         <a class="<?php echo ($current_page == 'admin_users.php') ? $active_class : $normal_class; ?>" href="admin_users.php">
             <span class="material-symbols-outlined">group</span><span>Khách hàng</span>
         </a>
+        
+        <a class="<?php echo ($current_page == 'admin_vouchers.php') ? $active_class : $normal_class; ?>" href="admin_vouchers.php">
+            <span class="material-symbols-outlined">local_activity</span><span>Quản lý mã giảm giá</span>
+        </a>
+        <a class="<?php echo ($current_page == 'admin_concessions.php') ? $active_class : $normal_class; ?>" href="admin_concessions.php">
+            <span class="material-symbols-outlined">fastfood</span><span>Quản lý bắp nước</span>
+        </a>
+        
         <a class="<?php echo ($current_page == 'admin_reports.php') ? $active_class : $normal_class; ?>" href="admin_reports.php">
             <span class="material-symbols-outlined">analytics</span><span>Báo cáo doanh thu</span>
         </a>
@@ -41,6 +49,12 @@ $normal_class = "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 hov
         </a>
     </div>
 </aside>
+
+<style>
+    /* Thêm style cho thanh cuộn bên trong menu nếu có quá nhiều mục */
+    aside .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    aside .custom-scrollbar::-webkit-scrollbar-thumb { background: #403a1e; border-radius: 10px; }
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

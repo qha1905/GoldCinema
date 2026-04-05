@@ -14,11 +14,17 @@ $room_name = $_POST['room_name'];
 $selected_seats = $_POST['selected_seats'];
 $ticket_price = (int)$_POST['total_price'];
 
+// Hứng biến show_id từ trang chọn ghế
+$show_id = $_POST['show_id'] ?? 0;
+
 $stmt = $pdo->prepare("SELECT title, poster_url FROM movies WHERE id = ?");
 $stmt->execute([$movie_id]);
 $movie = $stmt->fetch();
 
 $concessions = $pdo->query("SELECT * FROM concessions WHERE status = 'active'")->fetchAll();
+
+// Tạo URL an toàn để quay lại trang chọn ghế
+$back_url = "chonGhe.php?id=" . $movie_id . "&show_id=" . $show_id . "&time=" . urlencode($show_time) . "&room=" . urlencode($room_name);
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="vi">
@@ -34,14 +40,18 @@ $concessions = $pdo->query("SELECT * FROM concessions WHERE status = 'active'")-
     <main class="w-full max-w-[1200px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-8">
             <div class="flex items-center gap-3 mb-8 border-b border-accent-dark pb-6">
-                <a href="javascript:history.back()" class="text-primary hover:text-white"><span class="material-symbols-outlined text-2xl">arrow_back_ios</span></a>
+                <a href="<?php echo $back_url; ?>" class="text-primary hover:text-white"><span class="material-symbols-outlined text-2xl">arrow_back_ios</span></a>
                 <h1 class="text-2xl font-bold tracking-tight">Chọn Bắp Nước (F&B)</h1>
             </div>
             
             <div class="space-y-4">
                 <?php foreach($concessions as $item): ?>
-                <div class="bg-surface-dark border border-accent-dark rounded-2xl p-4 flex items-center gap-6">
-                    <img src="<?php echo htmlspecialchars($item['image_url']); ?>" class="w-24 h-24 object-contain bg-white/5 rounded-xl p-2">
+                <div class="bg-surface-dark border border-accent-dark rounded-2xl p-4 flex items-center gap-6 group hover:border-primary/50 transition-colors">
+                    
+                    <div class="w-24 h-24 rounded-xl border border-accent-dark overflow-hidden flex-shrink-0 bg-background-dark shadow-inner">
+                        <img src="<?php echo htmlspecialchars($item['image_url']); ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                    </div>
+                    
                     <div class="flex-1">
                         <h3 class="text-lg font-bold text-slate-100"><?php echo htmlspecialchars($item['name']); ?></h3>
                         <p class="text-sm text-slate-400 mb-2"><?php echo htmlspecialchars($item['description']); ?></p>
@@ -82,10 +92,13 @@ $concessions = $pdo->query("SELECT * FROM concessions WHERE status = 'active'")-
 
                 <input type="hidden" name="movie_id" value="<?php echo $movie_id; ?>">
                 <input type="hidden" name="cinema_id" value="<?php echo $cinema_id; ?>">
+                <input type="hidden" name="show_id" value="<?php echo $show_id; ?>"> 
                 <input type="hidden" name="show_time" value="<?php echo htmlspecialchars($show_time); ?>">
                 <input type="hidden" name="room_name" value="<?php echo htmlspecialchars($room_name); ?>">
                 <input type="hidden" name="selected_seats" value="<?php echo htmlspecialchars($selected_seats); ?>">
-                <input type="hidden" name="total_price" value="<?php echo $ticket_price; ?>"> <input type="hidden" name="concessions_data" id="inputConcessionsData" value="">
+                <input type="hidden" name="total_price" value="<?php echo $ticket_price; ?>"> 
+                
+                <input type="hidden" name="concessions_data" id="inputConcessionsData" value="">
                 <input type="hidden" name="concessions_price" id="inputConcessionsPrice" value="0">
 
                 <button type="submit" class="w-full bg-primary text-background-dark py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all">Tiếp tục thanh toán</button>

@@ -111,7 +111,7 @@ foreach ($showtimes as $show) {
                 <div class="bg-primary text-background-dark p-1.5 rounded-lg"><span class="material-symbols-outlined text-2xl font-bold">theater_comedy</span></div>
                 <h1 class="text-2xl font-black tracking-tight text-primary uppercase">Gold Cinema</h1>
             </a>
-            <a href="javascript:history.back()" class="text-slate-300 hover:text-primary transition-colors text-sm font-bold flex items-center gap-1">
+            <a href="index.php" class="text-slate-300 hover:text-primary transition-colors text-sm font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại
             </a>
         </div>

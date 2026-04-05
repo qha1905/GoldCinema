@@ -10,14 +10,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['selected_seats'])) {
 
 // 1. Lấy dữ liệu từ form chọn ghế
 $movie_id = $_POST['movie_id'] ?? 0;
-// ĐÃ THÊM: Hứng ID rạp từ trang chọn ghế
 $cinema_id = $_POST['cinema_id'] ?? 0; 
 $show_time = $_POST['show_time'] ?? '';
 $room_name = $_POST['room_name'] ?? '';
 $selected_seats = $_POST['selected_seats'] ?? '';
 $ticket_price = (int)($_POST['total_price'] ?? 0);
-$concessions_data = $_POST['concessions_data'] ?? ''; // Thêm dòng này
-$concessions_price = (int)($_POST['concessions_price'] ?? 0); // Thêm dòng này
+$concessions_data = $_POST['concessions_data'] ?? ''; 
+$concessions_price = (int)($_POST['concessions_price'] ?? 0); 
+
+// Hứng thêm show_id để trả về
+$show_id = $_POST['show_id'] ?? 0;
 
 // 2. Lấy thông tin phim
 $stmt = $pdo->prepare("SELECT title, poster_url FROM movies WHERE id = ?");
@@ -29,15 +31,15 @@ if (!$movie) {
 }
 
 // 3. Cấu hình thông tin API VietQR
-$bank_id = "TCB";                 // Mã ngân hàng
-$account_no = "999999999999";      // Số tài khoản của bạn
-$account_name = "NGUYEN LAM QUANG HA";  // Tên chủ thẻ 
-$transfer_content = "Mua vé " . $movie['title'] . " - " . time(); // Nội dung chuyển khoản
+$bank_id = "TCB";                 
+$account_no = "999999999999";      
+$account_name = "NGUYEN LAM QUANG HA";   
+$transfer_content = "Mua ve " . $movie['title'] . " - " . time(); 
 
 // 4. Tính toán
 $seats_array = explode(',', $selected_seats);
 $seat_count = count($seats_array);
-$convenience_fee = 10000; // Phí tiện ích cố định 10.000đ
+$convenience_fee = 10000; 
 $total_price = $ticket_price + $concessions_price + $convenience_fee;
 
 ?>
@@ -63,10 +65,19 @@ $total_price = $ticket_price + $concessions_price + $convenience_fee;
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col items-center py-10">
 
+    <form id="backForm" action="chonBapNuoc.php" method="POST" class="hidden">
+        <input type="hidden" name="movie_id" value="<?php echo htmlspecialchars($movie_id); ?>">
+        <input type="hidden" name="cinema_id" value="<?php echo htmlspecialchars($cinema_id); ?>">
+        <input type="hidden" name="show_id" value="<?php echo htmlspecialchars($show_id); ?>"> <input type="hidden" name="show_time" value="<?php echo htmlspecialchars($show_time); ?>">
+        <input type="hidden" name="room_name" value="<?php echo htmlspecialchars($room_name); ?>">
+        <input type="hidden" name="selected_seats" value="<?php echo htmlspecialchars($selected_seats); ?>">
+        <input type="hidden" name="total_price" value="<?php echo htmlspecialchars($ticket_price); ?>"> 
+    </form>
+
     <main class="w-full max-w-5xl mx-auto px-6">
         
         <div class="flex items-center gap-3 mb-8 border-b border-accent-dark pb-6">
-            <a href="javascript:history.back()" class="flex items-center text-primary hover:text-white transition-colors">
+            <a href="#" onclick="document.getElementById('backForm').submit(); return false;" class="flex items-center text-primary hover:text-white transition-colors">
                 <span class="material-symbols-outlined text-2xl">arrow_back_ios</span>
             </a>
             <h1 class="text-2xl font-bold tracking-tight text-white">Thanh toán</h1>
@@ -98,7 +109,7 @@ $total_price = $ticket_price + $concessions_price + $convenience_fee;
                             <p class="text-sm text-slate-400 font-medium text-center">Mở ứng dụng Ngân hàng và quét mã QR dưới đây.<br>Hệ thống tự động điền <strong class="text-primary">Số tiền</strong> và <strong class="text-primary">Nội dung</strong>.</p>
                             
                             <div class="bg-white p-2 rounded-xl shadow-[0_0_20px_rgba(242,204,13,0.15)] relative w-64 h-64 flex items-center justify-center overflow-hidden">
-                                <img id="vietqrImage" src="https://img.vietqr.io/image/<?php echo $bank_id; ?>-<?php echo $account_no; ?>-compact2.png?amount=<?php echo $total_price; ?>&addInfo=<?php echo $transfer_content; ?>&accountName=<?php echo urlencode($account_name); ?>" alt="Mã QR VietQR" class="w-full h-full object-contain transition-opacity duration-300">
+                                <img id="vietqrImage" src="https://img.vietqr.io/image/<?php echo $bank_id; ?>-<?php echo $account_no; ?>-compact2.png?amount=<?php echo $total_price; ?>&addInfo=<?php echo urlencode($transfer_content); ?>&accountName=<?php echo urlencode($account_name); ?>" alt="Mã QR VietQR" class="w-full h-full object-contain transition-opacity duration-300">
                             </div>
 
                             <div class="w-full max-w-sm bg-background-dark border border-accent-dark rounded-lg p-4 mt-2">
@@ -156,6 +167,17 @@ $total_price = $ticket_price + $concessions_price + $convenience_fee;
                                 <span class="text-slate-300">Giá vé (<?php echo $seat_count; ?>x)</span>
                                 <span class="font-bold text-slate-100"><?php echo number_format($ticket_price, 0, ',', '.'); ?>đ</span>
                             </div>
+                            
+                            <?php if ($concessions_price > 0): ?>
+                            <div class="flex justify-between items-start text-sm gap-4">
+                                <div class="flex flex-col">
+                                    <span class="text-slate-300">Bắp nước</span>
+                                    <span class="text-[11px] text-slate-500 italic mt-1 leading-snug"><?php echo htmlspecialchars($concessions_data); ?></span>
+                                </div>
+                                <span class="font-bold text-slate-100 shrink-0"><?php echo number_format($concessions_price, 0, ',', '.'); ?>đ</span>
+                            </div>
+                            <?php endif; ?>
+
                             <div class="flex justify-between items-center text-sm">
                                 <span class="text-slate-300">Phí tiện ích</span>
                                 <span class="font-bold text-slate-100"><?php echo number_format($convenience_fee, 0, ',', '.'); ?>đ</span>
@@ -174,17 +196,16 @@ $total_price = $ticket_price + $concessions_price + $convenience_fee;
                         </div>
 
                         <input type="hidden" name="cinema_id" value="<?php echo htmlspecialchars($cinema_id); ?>">
-                        
                         <input type="hidden" name="movie_id" value="<?php echo htmlspecialchars($movie_id); ?>">
                         <input type="hidden" name="show_time" value="<?php echo htmlspecialchars($show_time); ?>">
                         <input type="hidden" name="room_name" value="<?php echo htmlspecialchars($room_name); ?>">
                         <input type="hidden" name="selected_seats" value="<?php echo htmlspecialchars($selected_seats); ?>">
                         <input type="hidden" name="total_price" id="inputFinalTotal" value="<?php echo htmlspecialchars($total_price); ?>">
                         <input type="hidden" name="applied_promo_code" id="inputAppliedPromo" value="">
+                        
                         <input type="hidden" name="concessions_data" value="<?php echo htmlspecialchars($concessions_data); ?>">
                         <input type="hidden" name="concessions_price" value="<?php echo htmlspecialchars($concessions_price); ?>">
                         
-
                         <button type="submit" class="w-full bg-primary text-background-dark py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-[0_4px_14px_0_rgba(242,204,13,0.39)]">
                             Xác nhận thanh toán
                         </button>
@@ -200,13 +221,11 @@ $total_price = $ticket_price + $concessions_price + $convenience_fee;
         let currentTotal = originalTotal;
         let isPromoApplied = false;
 
-        // Dữ liệu API VietQR
         const bankId = "<?php echo $bank_id; ?>";
         const accNo = "<?php echo $account_no; ?>";
         const accName = "<?php echo urlencode($account_name); ?>";
-        const addInfo = "<?php echo $transfer_content; ?>";
+        const addInfo = "<?php echo urlencode($transfer_content); ?>";
 
-        // Xử lý Ẩn/Hiện Box QR
         function toggleQR() {
             const qrRadio = document.querySelector('input[name="payment_method"][value="Chuyển khoản VietQR"]');
             const qrBox = document.getElementById('vietQrBox');
@@ -217,13 +236,11 @@ $total_price = $ticket_price + $concessions_price + $convenience_fee;
             }
         }
 
-        // Cập nhật giá lên giao diện và TỰ ĐỘNG CẬP NHẬT MÃ QR
         function updateDisplayPrice() {
             const formattedPrice = new Intl.NumberFormat('vi-VN').format(currentTotal) + 'đ';
             document.getElementById('finalPriceText').textContent = formattedPrice;
             document.getElementById('inputFinalTotal').value = currentTotal;
 
-            // Cập nhật lại ảnh QR Code với số tiền mới
             const qrImage = document.getElementById('vietqrImage');
             qrImage.style.opacity = '0.5'; 
             const newQrUrl = `https://img.vietqr.io/image/${bankId}-${accNo}-compact2.png?amount=${currentTotal}&addInfo=${addInfo}&accountName=${accName}`;
@@ -232,7 +249,6 @@ $total_price = $ticket_price + $concessions_price + $convenience_fee;
             qrImage.onload = () => { qrImage.style.opacity = '1'; }
         }
 
-        // Xử lý áp dụng mã giảm giá bằng AJAX (Fetch API)
         async function applyPromo() {
             const inputCode = document.getElementById('promoCode').value.trim().toUpperCase();
             const msgObj = document.getElementById('promoMessage');
@@ -253,17 +269,14 @@ $total_price = $ticket_price + $concessions_price + $convenience_fee;
                 return;
             }
 
-            // Giao diện: Đang xử lý
             msgObj.textContent = "Đang kiểm tra mã...";
             msgObj.className = "text-sm mt-2 text-slate-400";
 
             try {
-                // Đóng gói dữ liệu gửi lên API
                 let formData = new FormData();
                 formData.append('promo_code', inputCode);
-                formData.append('current_total', originalTotal); // Gửi tổng tiền gốc lên kiểm tra
+                formData.append('current_total', originalTotal); 
 
-                // Gửi request bằng Fetch API
                 const response = await fetch('check_voucher.php', {
                     method: 'POST',
                     body: formData
@@ -272,14 +285,12 @@ $total_price = $ticket_price + $concessions_price + $convenience_fee;
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    // Xử lý khi mã hợp lệ
                     let discountAmt = parseInt(result.discount_amount);
-                    if (currentTotal < discountAmt) discountAmt = currentTotal; // Không để âm tiền
+                    if (currentTotal < discountAmt) discountAmt = currentTotal; 
 
                     currentTotal -= discountAmt;
                     isPromoApplied = true;
 
-                    // THÊM DÒNG NÀY VÀO ĐÂY: Lưu tên mã giảm giá vào form để gửi đi
                     document.getElementById('inputAppliedPromo').value = inputCode;
 
                     msgObj.textContent = result.message;
@@ -289,9 +300,8 @@ $total_price = $ticket_price + $concessions_price + $convenience_fee;
                     discountRow.classList.remove('hidden');
                     discountValue.textContent = "-" + new Intl.NumberFormat('vi-VN').format(discountAmt) + 'đ';
 
-                    updateDisplayPrice(); // Cập nhật lại giao diện và QR Code
+                    updateDisplayPrice(); 
                 } else {
-                    // Xử lý khi mã lỗi (hết hạn, sai mã...)
                     msgObj.textContent = result.message;
                     msgObj.className = "text-sm mt-2 text-red-500";
                 }
