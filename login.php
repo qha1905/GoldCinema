@@ -1,5 +1,4 @@
 <?php
-
 // Cấu hình API Google
 $google_client_id = '277444230924-6b00s794lm9sg1e5hp5sfupu4v5te5s0.apps.googleusercontent.com';
 $google_redirect_uri = 'http://localhost/GOLDCINEMA/google_callback.php';
@@ -16,6 +15,12 @@ session_start();
 require_once 'includes/db_connect.php';
 
 $error = '';
+$success = '';
+
+// Bắt thông báo đổi mật khẩu thành công từ trang forgot_password.php
+if (isset($_GET['msg']) && $_GET['msg'] === 'reset_success') {
+    $success = "Đổi mật khẩu thành công! Vui lòng đăng nhập lại bằng mật khẩu mới.";
+}
 
 // Kiểm tra nếu người dùng đã đăng nhập thì đẩy về trang chủ luôn
 if (isset($_SESSION["user_logged_in"]) && $_SESSION["user_logged_in"] === true) {
@@ -36,12 +41,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION["user_logged_in"] = true;
         $_SESSION["user_id"] = $user['id'];
         $_SESSION["user_name"] = $user['fullname'];
-        
-        // THÊM DÒNG NÀY ĐỂ LƯU QUYỀN (ROLE)
         $_SESSION["role"] = $user['role']; 
         
-        // CHUYỂN HƯỚNG THÔNG MINH:
-        // Nếu là admin thì cho bay thẳng vào trang Quản trị, ngược lại về Trang chủ
+        // CHUYỂN HƯỚNG THÔNG MINH
         if ($_SESSION["role"] === 'admin') {
             header("Location: admin_dashboard.php");
         } else {
@@ -65,16 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#f2cc0d",
-                        "background-light": "#f8f8f5",
-                        "background-dark": "#221f10",
-                    },
-                    fontFamily: {"display": ["Be Vietnam Pro", "sans-serif"]},
-                },
-            },
+            theme: { extend: { colors: { "primary": "#f2cc0d", "background-light": "#f8f8f5", "background-dark": "#221f10", }, fontFamily: {"display": ["Be Vietnam Pro", "sans-serif"]}, }, },
         }
     </script>
 </head>
@@ -100,9 +93,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <p class="text-slate-400 text-sm mt-1">Đăng nhập để đặt vé và nhận ưu đãi đặc quyền</p>
                 </div>
 
+                <?php if(!empty($success)): ?>
+                    <div class="bg-green-500/10 border border-green-500/50 text-green-500 px-4 py-3 rounded-lg mb-6 text-sm flex items-center gap-2 font-bold">
+                        <span class="material-symbols-outlined">check_circle</span> <?php echo $success; ?>
+                    </div>
+                <?php endif; ?>
+
                 <?php if(!empty($error)): ?>
-                    <div class="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-lg mb-6 text-sm">
-                        <?php echo $error; ?>
+                    <div class="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-lg mb-6 text-sm flex items-center gap-2">
+                        <span class="material-symbols-outlined">error</span> <?php echo $error; ?>
                     </div>
                 <?php endif; ?>
 
@@ -126,7 +125,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <input class="w-4 h-4 rounded border-slate-700 bg-background-dark text-primary focus:ring-primary focus:ring-offset-background-dark" type="checkbox"/>
                             <span class="text-slate-400 group-hover:text-slate-200 transition-colors">Ghi nhớ đăng nhập</span>
                         </label>
-                        <a class="text-primary hover:text-primary/80 font-medium transition-colors" href="#">Quên mật khẩu?</a>
+                        <a class="text-primary hover:text-primary/80 font-medium transition-colors" href="forgot_password.php">Quên mật khẩu?</a>
                     </div>
                     <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-background-dark font-bold py-4 rounded-lg shadow-lg shadow-primary/20 transition-all transform active:scale-[0.98] mt-2">
                         ĐĂNG NHẬP NGAY
