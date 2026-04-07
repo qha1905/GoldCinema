@@ -32,15 +32,14 @@ if (!$movie) {
 
 // 3. Cấu hình thông tin API VietQR
 $bank_id = "TCB";                 
-$account_no = "999999999999";      
+$account_no = "393944441111";      
 $account_name = "NGUYEN LAM QUANG HA";   
 $transfer_content = "Mua ve " . $movie['title'] . " - " . time(); 
 
 // 4. Tính toán
 $seats_array = explode(',', $selected_seats);
 $seat_count = count($seats_array);
-$convenience_fee = 10000; 
-$total_price = $ticket_price + $concessions_price + $convenience_fee;
+$total_price = $ticket_price + $concessions_price;
 
 ?>
 <!DOCTYPE html>
@@ -178,10 +177,6 @@ $total_price = $ticket_price + $concessions_price + $convenience_fee;
                             </div>
                             <?php endif; ?>
 
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-slate-300">Phí tiện ích</span>
-                                <span class="font-bold text-slate-100"><?php echo number_format($convenience_fee, 0, ',', '.'); ?>đ</span>
-                            </div>
                             <div id="discountRow" class="flex justify-between items-center text-sm hidden">
                                 <span class="text-green-500">Giảm giá</span>
                                 <span id="discountValue" class="font-bold text-green-500">-0đ</span>

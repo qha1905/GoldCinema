@@ -44,18 +44,18 @@ $all_filtered_users = $stmt_summary->fetchAll();
 
 $rank_counts = ['Platinum' => 0, 'Gold' => 0, 'Silver' => 0, 'All' => count($all_filtered_users)];
 foreach ($all_filtered_users as $u) {
-    if ($u['total_spent'] >= 2000000) $rank_counts['Platinum']++;
-    elseif ($u['total_spent'] >= 500000) $rank_counts['Gold']++;
+    if ($u['total_spent'] >= 10000000) $rank_counts['Platinum']++;
+    elseif ($u['total_spent'] >= 2000000) $rank_counts['Gold']++;
     else $rank_counts['Silver']++;
 }
 
 $having_sql = "1=1";
 if ($filter_rank == 'Platinum') {
-    $having_sql = "total_spent >= 2000000";
+    $having_sql = "total_spent >= 10000000";
 } elseif ($filter_rank == 'Gold') {
-    $having_sql = "total_spent >= 500000 AND total_spent < 2000000";
+    $having_sql = "total_spent >= 2000000 AND total_spent < 10000000";
 } elseif ($filter_rank == 'Silver') {
-    $having_sql = "total_spent < 500000";
+    $having_sql = "total_spent < 2000000";
 }
 
 // ==========================================
@@ -188,8 +188,8 @@ function getUrl($p, $s, $o, $r, $q) {
                                 <tbody class="divide-y divide-accent-dark/50">
                                     <?php foreach ($customers as $cus): 
                                         $spent = $cus['total_spent'];
-                                        if ($spent >= 2000000) { $rank = 'Platinum'; $cls = 'bg-slate-200 text-slate-900'; }
-                                        elseif ($spent >= 500000) { $rank = 'Gold'; $cls = 'bg-primary text-background-dark'; }
+                                        if ($spent >= 10000000) { $rank = 'Platinum'; $cls = 'bg-slate-200 text-slate-900'; }
+                                        elseif ($spent >= 2000000) { $rank = 'Gold'; $cls = 'bg-primary text-background-dark'; }
                                         else { $rank = 'Silver'; $cls = 'bg-slate-600 text-white'; }
                                     ?>
                                     <tr class="hover:bg-accent-dark/20 transition-colors group">

@@ -80,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="layout-content-container flex flex-col max-w-[520px] flex-1 bg-primary/5 p-6 md:p-10 rounded-xl border border-primary/10 shadow-2xl backdrop-blur-sm">
                     
                     <div class="flex flex-col items-center mb-8">
-                        <h1 class="text-primary text-4xl font-black uppercase">GOLD CINEMA</h1>
+                        <h1 class="text-3xl font-black tracking-tighter uppercase italic">H CINEMA</h1>
                     </div>
 
                     <div class="mb-6">

@@ -113,7 +113,7 @@ $items = $pdo->query("SELECT * FROM concessions ORDER BY id DESC")->fetchAll();
         <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
             <?php echo $msg; ?>
             <div class="flex flex-col mb-8">
-                <h1 class="text-3xl font-black text-slate-100 uppercase tracking-tight">Quản lý Bắp Nước (F&B)</h1>
+                <h1 class="text-3xl font-black text-slate-100 uppercase tracking-tight">Quản lý Bắp Nước</h1>
                 <p class="text-slate-400 mt-1">Thêm các Combo bắp nước để tăng doanh thu cho hệ thống rạp.</p>
             </div>
 

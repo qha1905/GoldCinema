@@ -41,7 +41,7 @@ $back_url = "chonGhe.php?id=" . $movie_id . "&show_id=" . $show_id . "&time=" . 
         <div class="lg:col-span-8">
             <div class="flex items-center gap-3 mb-8 border-b border-accent-dark pb-6">
                 <a href="<?php echo $back_url; ?>" class="text-primary hover:text-white"><span class="material-symbols-outlined text-2xl">arrow_back_ios</span></a>
-                <h1 class="text-2xl font-bold tracking-tight">Chọn Bắp Nước (F&B)</h1>
+                <h1 class="text-2xl font-bold tracking-tight">Chọn Bắp Nước</h1>
             </div>
             
             <div class="space-y-4">

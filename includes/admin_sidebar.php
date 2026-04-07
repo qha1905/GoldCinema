@@ -5,9 +5,7 @@ $normal_class = "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 hov
 ?>
 <aside id="adminSidebar" class="w-72 bg-surface-dark border-r border-accent-dark fixed inset-y-0 left-0 z-50 transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
     <div class="p-6 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background-dark">
-            <span class="material-symbols-outlined text-2xl font-bold">theater_comedy</span>
-        </div>
+        <img src="images/my_logo.png" alt="Logo QHA Cinema" class="w-10 h-10 object-cover rounded-full shadow-sm border border-primary/30">
         <div>
             <h1 class="text-primary text-lg font-black leading-none uppercase tracking-wide">CineAdmin</h1>
             <p class="text-primary/60 text-[10px] font-bold uppercase tracking-widest mt-1">Hệ thống quản trị</p>
@@ -32,10 +30,10 @@ $normal_class = "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 hov
         </a>
         
         <a class="<?php echo ($current_page == 'admin_vouchers.php') ? $active_class : $normal_class; ?>" href="admin_vouchers.php">
-            <span class="material-symbols-outlined">local_activity</span><span>Quản lý mã giảm giá</span>
+            <span class="material-symbols-outlined">local_activity</span><span>Mã giảm giá</span>
         </a>
         <a class="<?php echo ($current_page == 'admin_concessions.php') ? $active_class : $normal_class; ?>" href="admin_concessions.php">
-            <span class="material-symbols-outlined">fastfood</span><span>Quản lý bắp nước</span>
+            <span class="material-symbols-outlined">fastfood</span><span>Bắp nước</span>
         </a>
         
         <a class="<?php echo ($current_page == 'admin_reports.php') ? $active_class : $normal_class; ?>" href="admin_reports.php">
@@ -51,7 +49,6 @@ $normal_class = "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 hov
 </aside>
 
 <style>
-    /* Thêm style cho thanh cuộn bên trong menu nếu có quá nhiều mục */
     aside .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     aside .custom-scrollbar::-webkit-scrollbar-thumb { background: #403a1e; border-radius: 10px; }
 </style>
@@ -59,12 +56,9 @@ $normal_class = "flex items-center gap-3 px-4 py-3 rounded-xl text-slate-100 hov
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('adminSidebar');
-    
-    // Tìm nút 3 gạch trên Header (dựa vào class lg:hidden)
     const menuBtn = document.querySelector('header .lg\\:hidden');
 
     if (sidebar && menuBtn) {
-        // Tạo một lớp phủ (Overlay) đen mờ phía sau menu
         const overlay = document.createElement('div');
         overlay.className = 'fixed inset-0 bg-black/80 z-40 hidden lg:hidden backdrop-blur-sm transition-opacity opacity-0';
         document.body.appendChild(overlay);
@@ -72,21 +66,18 @@ document.addEventListener('DOMContentLoaded', function() {
         function toggleMenu() {
             const isClosed = sidebar.classList.contains('-translate-x-full');
             if (isClosed) {
-                // Kéo menu ra
                 sidebar.classList.remove('-translate-x-full');
                 overlay.classList.remove('hidden');
                 setTimeout(() => overlay.classList.remove('opacity-0'), 10);
             } else {
-                // Đẩy menu vào
                 sidebar.classList.add('-translate-x-full');
                 overlay.classList.add('opacity-0');
                 setTimeout(() => overlay.classList.add('hidden'), 300);
             }
         }
 
-        // Sự kiện click
         menuBtn.addEventListener('click', toggleMenu);
-        overlay.addEventListener('click', toggleMenu); // Bấm ra ngoài vùng tối để đóng
+        overlay.addEventListener('click', toggleMenu);
     }
 });
 </script>
