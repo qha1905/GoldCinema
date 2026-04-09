@@ -39,9 +39,9 @@ $orders = $stmt->fetchAll();
 
     <header class="border-b border-border-dark bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <a href="index.php" class="flex items-center gap-3 group">
-                <div class="bg-primary text-background-dark p-1.5 rounded-lg"><span class="material-symbols-outlined text-2xl font-bold">theater_comedy</span></div>
-                <h1 class="text-2xl font-black tracking-tight text-primary uppercase">Gold Cinema</h1>
+            <a href="index.php" class="flex items-center gap-3 hover:scale-105 transition-transform">
+                <img src="images/my_logo.png" alt="Logo Rạp Phim Của Tôi" class="h-12 w-12 object-cover rounded-full shadow-md border border-primary/30">
+                <h1 class="text-2xl font-black tracking-tighter uppercase italic">H CINEMA</h1>
             </a>
             <div class="flex items-center gap-4">
                 <a href="index.php" class="text-slate-300 hover:text-primary transition-colors text-sm font-bold flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">home</span> Trang chủ</a>

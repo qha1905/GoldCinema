@@ -36,18 +36,18 @@ $total_spent = $stmt_spent->fetchColumn() ?: 0;
 
 $rank = 'Silver';
 $rank_class = 'bg-slate-500 text-white shadow-[0_4px_14px_0_rgba(100,116,139,0.39)]';
-$next_rank_spent = 500000;
+$next_rank_spent = 2000000;
 $progress = ($total_spent / 500000) * 100;
 
-if ($total_spent >= 2000000) { 
+if ($total_spent >= 10000000) { 
     $rank = 'Platinum'; 
     $rank_class = 'bg-slate-200 text-slate-900 shadow-[0_4px_14px_0_rgba(226,232,240,0.39)]'; 
     $progress = 100;
-} elseif ($total_spent >= 500000) { 
+} elseif ($total_spent >= 2000000) { 
     $rank = 'Gold'; 
     $rank_class = 'bg-primary text-background-dark shadow-[0_4px_14px_0_rgba(242,204,13,0.39)]'; 
-    $next_rank_spent = 2000000;
-    $progress = ($total_spent / 2000000) * 100;
+    $next_rank_spent = 10000000;
+    $progress = ($total_spent / 10000000) * 100;
 }
 ?>
 <!DOCTYPE html>
@@ -68,9 +68,9 @@ if ($total_spent >= 2000000) {
 
     <header class="border-b border-border-dark bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <a href="index.php" class="flex items-center gap-3 group">
-                <div class="bg-primary text-background-dark p-1.5 rounded-lg"><span class="material-symbols-outlined text-2xl font-bold">theater_comedy</span></div>
-                <h1 class="text-2xl font-black tracking-tight text-primary uppercase">Gold Cinema</h1>
+            <a href="index.php" class="flex items-center gap-3 hover:scale-105 transition-transform">
+                <img src="images/my_logo.png" alt="Logo Rạp Phim Của Tôi" class="h-12 w-12 object-cover rounded-full shadow-md border border-primary/30">
+                <h1 class="text-2xl font-black tracking-tighter uppercase italic">H CINEMA</h1>
             </a>
             <div class="flex items-center gap-4">
                 <a href="index.php" class="text-slate-300 hover:text-primary transition-colors text-sm font-bold flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">home</span> Trang chủ</a>

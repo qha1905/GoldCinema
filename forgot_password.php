@@ -156,7 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="flex flex-col items-center mb-10">
                 <a href="index.php" class="flex items-center gap-3 text-primary mb-2 hover:scale-105 transition-transform">
                     <span class="material-symbols-outlined text-5xl">lock_reset</span>
-                    <h1 class="text-3xl font-black tracking-tighter uppercase italic">GOLD CINEMA</h1>
+                    <h1 class="text-3xl font-black tracking-tighter uppercase italic">H CINEMA</h1>
                 </a>
             </div>
             

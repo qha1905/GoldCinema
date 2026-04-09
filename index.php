@@ -106,7 +106,7 @@ if (isset($_SESSION["user_logged_in"]) && $_SESSION["role"] !== 'admin') {
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>H Cinema - Trải nghiệm điện ảnh đỉnh cao</title>
+    <title>Gold Cinema - Trải nghiệm điện ảnh đỉnh cao</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -156,9 +156,9 @@ if (isset($_SESSION["user_logged_in"]) && $_SESSION["role"] !== 'admin') {
 
     <header class="fixed top-0 inset-x-0 z-50 bg-background-dark/80 backdrop-blur-md border-b border-border-dark transition-all duration-300">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <a href="index.php" class="flex items-center gap-3 hover:scale-105 transition-transform">
-                <img src="images/my_logo.png" alt="Logo Rạp Phim Của Tôi" class="h-12 w-12 object-cover rounded-full shadow-md border border-primary/30">
-                <h1 class="text-2xl font-black tracking-tight text-primary uppercase">H Cinema</h1>
+            <a href="index.php" class="flex items-center gap-3 text-primary mb-2 hover:scale-105 transition-transform">
+                    <img src="images/my_logo.png" alt="Logo Rạp Phim Của Tôi" class="h-12 w-12 object-cover rounded-full shadow-md border border-primary/30">
+                    <h1 class="text-3xl font-black tracking-tighter uppercase italic">H CINEMA</h1>
             </a>
 
             <nav class="hidden md:flex items-center gap-8">
@@ -427,15 +427,7 @@ if (isset($_SESSION["user_logged_in"]) && $_SESSION["role"] !== 'admin') {
 
     </main>
 
-    <footer class="border-t border-border-dark bg-surface-dark py-12 mt-auto">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div class="flex items-center gap-3">
-                <img src="images/my_logo.png" alt="Logo QHA Cinema" class="h-10 w-10 object-cover rounded-full shadow-sm border border-primary/30">
-                <span class="text-xl font-black text-slate-100 tracking-tight uppercase">H Cinema</span>
-            </div>
-            <p class="text-sm text-slate-500">© 2026 H Cinema. Tất cả các quyền được bảo lưu.</p>
-        </div>
-    </footer>
+    <?php include 'includes/footer.php'; ?>
 
     <!-- khối HTML của Popup trailer -->
     <div id="trailerModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/95 backdrop-blur-md opacity-0 transition-opacity duration-300">

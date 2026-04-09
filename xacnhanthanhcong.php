@@ -206,11 +206,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="layout-container flex h-full grow flex-col">
         
         <header class="flex items-center justify-between border-b border-primary/20 px-6 py-4 md:px-20 lg:px-40 bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
-            <a href="index.php" class="flex items-center gap-4 hover:opacity-80">
-                <div class="text-primary size-8">
-                    <span class="material-symbols-outlined text-3xl">movie</span>
-                </div>
-                <h2 class="text-slate-100 text-xl font-black tracking-tight uppercase">GOLD CINEMA</h2>
+            <a href="index.php" class="flex items-center gap-3 hover:scale-105 transition-transform">
+                <img src="images/my_logo.png" alt="Logo Rạp Phim Của Tôi" class="h-12 w-12 object-cover rounded-full shadow-md border border-primary/30">
+                <h1 class="text-2xl font-black tracking-tight text-primary uppercase">H Cinema</h1>
             </a>
             <div class="flex items-center gap-4">
                 <div class="hidden sm:block text-right">
