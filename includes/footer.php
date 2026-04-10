@@ -1,50 +1,50 @@
-<footer class="bg-background-dark border-t border-border-dark px-6 md:px-20 lg:px-40 py-20">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
-        <div class="col-span-1 md:col-span-2 lg:col-span-1">
-            
-            <a href="index.php" class="flex items-center gap-3 mb-8 group hover:scale-105 transition-transform">
-                <img src="images/my_logo.png" alt="Logo H Cinema" class="h-14 w-14 object-cover rounded-full shadow-md border border-primary/30">
-            </a>
-            
-            <p class="text-slate-500 text-sm font-medium leading-relaxed mb-8">
-                H Cinema - Đồng hành cùng đam mê điện ảnh của bạn.
-            </p>
-            <div class="flex items-center gap-4">
-                <a href="#" class="size-10 bg-surface-dark rounded-full flex items-center justify-center text-slate-400 hover:bg-primary hover:text-background-dark transition-all shadow-lg"><span class="material-symbols-outlined text-lg">public</span></a>
-                <a href="#" class="size-10 bg-surface-dark rounded-full flex items-center justify-center text-slate-400 hover:bg-primary hover:text-background-dark transition-all shadow-lg"><span class="material-symbols-outlined text-lg">mail</span></a>
-                <a href="#" class="size-10 bg-surface-dark rounded-full flex items-center justify-center text-slate-400 hover:bg-primary hover:text-background-dark transition-all shadow-lg"><span class="material-symbols-outlined text-lg">call</span></a>
+<?php
+// File: includes/footer.php
+?>
+        </main> <footer class="bg-background-dark border-t border-white/10 pt-16 pb-8 mt-12">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-2 text-primary">
+                            <img src="images/my_logo.png" alt="Logo" class="h-9 w-9 object-cover rounded-full shadow-md border border-primary/30">
+                            <h2 class="text-xl font-bold tracking-tight">H CINEMA</h2>
+                        </div>
+                        <p class="text-slate-400 text-sm leading-relaxed">
+                            Nâng tầm trải nghiệm điện ảnh với hệ thống rạp chiếu hiện đại và dịch vụ đẳng cấp quốc tế tại Việt Nam.
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-white font-bold mb-6">Liên kết nhanh</h4>
+                        <ul class="space-y-4 text-slate-400 text-sm">
+                            <li><a class="hover:text-primary transition-colors" href="#">Về chúng tôi</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">Tuyển dụng</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">Điều khoản sử dụng</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-white font-bold mb-6">Hỗ trợ khách hàng</h4>
+                        <ul class="space-y-4 text-slate-400 text-sm">
+                            <li><a class="hover:text-primary transition-colors" href="#">Hotline: 1234 5678</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">Câu hỏi thường gặp</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">Chính sách bảo mật</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-white font-bold mb-6">Đăng ký nhận tin</h4>
+                        <form class="flex flex-col gap-3">
+                            <input class="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:ring-primary focus:border-primary outline-none" placeholder="Email của bạn" type="email"/>
+                            <button type="button" class="bg-primary text-background-dark font-bold py-2.5 rounded-lg text-sm hover:brightness-110 transition-all">Đăng ký ngay</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-xs uppercase tracking-widest">
+                    <p>© 2026 H CINEMA. All rights reserved.</p>
+                </div>
             </div>
-        </div>
-        <div>
-            <h4 class="text-slate-100 font-black uppercase tracking-widest mb-8 flex items-center gap-2">
-                <span class="w-6 h-1 bg-primary rounded-full"></span> Về chúng tôi
-            </h4>
-            <ul class="space-y-4 text-slate-500 text-sm font-bold">
-                <li><a href="#" class="hover:text-primary transition-colors uppercase italic">Giới thiệu H Cinema</a></li>
-                <li><a href="#" class="hover:text-primary transition-colors uppercase italic">Chính sách bảo mật</a></li>
-                <li><a href="#" class="hover:text-primary transition-colors uppercase italic">Điều khoản sử dụng</a></li>
-                <li><a href="#" class="hover:text-primary transition-colors uppercase italic">Tuyển dụng</a></li>
-            </ul>
-        </div>
-        <div>
-            <h4 class="text-slate-100 font-black uppercase tracking-widest mb-8 flex items-center gap-2">
-                <span class="w-6 h-1 bg-primary rounded-full"></span> Hỗ trợ khách hàng
-            </h4>
-            <ul class="space-y-4 text-slate-500 text-sm font-bold">
-                <li><a href="#" class="hover:text-primary transition-colors uppercase italic">Hướng dẫn đặt vé</a></li>
-                <li><a href="#" class="hover:text-primary transition-colors uppercase italic">Câu hỏi thường gặp</a></li>
-                <li><a href="#" class="hover:text-primary transition-colors uppercase italic">Chăm sóc khách hàng</a></li>
-                <li><a href="#" class="hover:text-primary transition-colors uppercase italic">Liên hệ quảng cáo</a></li>
-            </ul>
-        </div>
-        <div>
-            <h4 class="text-slate-100 font-black uppercase tracking-widest mb-8 flex items-center gap-2">
-                <span class="w-6 h-1 bg-primary rounded-full"></span> Nhận khuyến mãi
-            </h4>
-            <p class="text-slate-500 text-xs font-bold leading-relaxed mb-6 uppercase">Đăng ký nhận thông tin ưu đãi mới nhất từ chúng tôi mỗi tuần.</p>
-        </div>
-    </div>
-    <div class="pt-8 border-t border-border-dark flex flex-col md:flex-row items-center justify-between gap-6">
-        <p class="text-slate-600 text-xs font-black uppercase tracking-widest">© 2026 H CINEMA. ALL RIGHTS RESERVED.</p>
-    </div>
-</footer>
+        </footer>
+    </div> </body>
+</html>

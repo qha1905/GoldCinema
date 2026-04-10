@@ -19,13 +19,17 @@ $cinemas = $pdo->query("SELECT id, name, total_rooms FROM cinemas WHERE status =
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $movie_id = (int)$_POST['movie_id'];
     $cinema_id = (int)$_POST['cinema_id'];
-    $room_name = trim($_POST['room_name']);
+    
+    // Sửa nhận dữ liệu thành mảng (Array)
+    $room_names = $_POST['room_names'] ?? []; 
+    
     $show_date = $_POST['show_date'];
     $start_time = $_POST['start_time'];
     $status = $_POST['status'];
 
-    if (!$movie_id || !$cinema_id || empty($room_name) || empty($show_date) || empty($start_time)) {
-        $error = "Vui lòng nhập đầy đủ thông tin bắt buộc.";
+    // Kiểm tra biến mảng $room_names
+    if (!$movie_id || !$cinema_id || empty($room_names) || empty($show_date) || empty($start_time)) {
+        $error = "Vui lòng nhập đầy đủ thông tin bắt buộc và chọn ít nhất 1 phòng chiếu.";
     } else {
         try {
             // 1. Tự động tính Giờ kết thúc dựa vào Thời lượng phim
@@ -38,7 +42,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
             $end_time = date('H:i:s', strtotime("+$movie_duration minutes", strtotime($start_time)));
 
-            // 2. KIỂM TRA TRÙNG LỊCH CHIẾU
+            // 2. XỬ LÝ LƯU CHO TỪNG PHÒNG ĐƯỢC CHỌN
+            $success_count = 0;
+            $conflict_rooms = [];
+
+            // Chuẩn bị sẵn câu lệnh SQL để dùng trong vòng lặp
             $sql_check = "
                 SELECT COUNT(*) FROM showtimes 
                 WHERE cinema_id = :cinema_id 
@@ -48,35 +56,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                   AND end_time > :new_start_time
             ";
             $stmt_check = $pdo->prepare($sql_check);
-            $stmt_check->execute([
-                ':cinema_id' => $cinema_id,
-                ':room_name' => $room_name,
-                ':show_date' => $show_date,
-                ':new_end_time' => $end_time,
-                ':new_start_time' => $start_time
-            ]);
 
-            $conflict_count = $stmt_check->fetchColumn();
+            $sql_insert = "INSERT INTO showtimes (movie_id, cinema_id, room_name, show_date, start_time, end_time, status) 
+                           VALUES (:movie_id, :cinema_id, :room_name, :show_date, :start_time, :end_time, :status)";
+            $stmt_insert = $pdo->prepare($sql_insert);
 
-            if ($conflict_count > 0) {
-                $time_format = date('H:i', strtotime($start_time)) . ' đến ' . date('H:i', strtotime($end_time));
-                $error = "Lỗi: <b>Phòng {$room_name}</b> đã có phim khác đang chiếu hoặc dọn dẹp trong khoảng thời gian từ <b>{$time_format}</b>. Vui lòng đổi giờ chiếu hoặc chọn phòng khác!";
-            } else {
-                // Lưu vào Database
-                $sql = "INSERT INTO showtimes (movie_id, cinema_id, room_name, show_date, start_time, end_time, status) 
-                        VALUES (:movie_id, :cinema_id, :room_name, :show_date, :start_time, :end_time, :status)";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute([
-                    ':movie_id' => $movie_id,
+            // Duyệt qua từng phòng mà Admin đã tick chọn
+            foreach ($room_names as $room_name) {
+                $stmt_check->execute([
                     ':cinema_id' => $cinema_id,
                     ':room_name' => $room_name,
                     ':show_date' => $show_date,
-                    ':start_time' => $start_time,
-                    ':end_time' => $end_time,
-                    ':status' => $status
+                    ':new_end_time' => $end_time,
+                    ':new_start_time' => $start_time
                 ]);
-                $message = "Đã tạo lịch chiếu mới thành công!";
+
+                if ($stmt_check->fetchColumn() > 0) {
+                    $conflict_rooms[] = $room_name; // Ghi nhận phòng bị trùng
+                } else {
+                    // Không trùng thì thêm suất chiếu
+                    $stmt_insert->execute([
+                        ':movie_id' => $movie_id,
+                        ':cinema_id' => $cinema_id,
+                        ':room_name' => $room_name,
+                        ':show_date' => $show_date,
+                        ':start_time' => $start_time,
+                        ':end_time' => $end_time,
+                        ':status' => $status
+                    ]);
+                    $success_count++;
+                }
             }
+
+            // 3. XUẤT THÔNG BÁO THEO NHÓM
+            if (count($conflict_rooms) > 0) {
+                $error = "Lỗi: Phòng <b>" . implode(', ', $conflict_rooms) . "</b> bị trùng lịch chiếu. ";
+                if ($success_count > 0) {
+                    $message = "Đã thêm thành công $success_count suất cho các phòng còn lại!";
+                }
+            } elseif ($success_count > 0) {
+                $message = "Đã tạo $success_count lịch chiếu mới thành công!";
+            }
+
         } catch (PDOException $e) {
             $error = "Lỗi Database: " . $e->getMessage();
         }
@@ -150,11 +171,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </select>
                             </div>
 
-                            <div class="flex flex-col gap-2">
-                                <label class="text-sm font-bold text-slate-300">Phòng chiếu</label>
-                                <select name="room_name" id="roomSelect" required class="w-full bg-accent-dark/30 border border-accent-dark rounded-xl py-3 px-4 text-slate-100 focus:border-primary outline-none cursor-pointer">
-                                    <option class="bg-surface-dark text-slate-400" value="">-- Vui lòng chọn rạp trước --</option>
-                                </select>
+                            <div class="flex flex-col gap-2 md:col-span-2">
+                                <label class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                                    Phòng chiếu 
+                                    <span class="bg-primary/20 text-primary text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-widest">Có thể chọn nhiều phòng</span>
+                                </label>
+                                <div id="roomSelect" class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-accent-dark/30 border border-accent-dark rounded-xl p-4 min-h-[60px]">
+                                    <p class="text-slate-500 text-sm col-span-full italic">-- Vui lòng chọn rạp để tải danh sách phòng --</p>
+                                </div>
                             </div>
 
                             <div class="flex flex-col gap-2">
@@ -195,33 +219,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         const cinemaSelect = document.getElementById('cinemaSelect');
         const roomSelect = document.getElementById('roomSelect');
         
-        // Lấy số lượng phòng của rạp đang được chọn thông qua data-rooms
         const selectedOption = cinemaSelect.options[cinemaSelect.selectedIndex];
         const totalRooms = parseInt(selectedOption.getAttribute('data-rooms')) || 0;
 
-        // Reset danh sách phòng
         roomSelect.innerHTML = '';
 
-        // Nếu chưa chọn rạp
         if (totalRooms === 0) {
-            roomSelect.innerHTML = '<option class="bg-surface-dark text-slate-400" value="">-- Vui lòng chọn rạp trước --</option>';
+            roomSelect.innerHTML = '<p class="text-slate-500 text-sm col-span-full italic">-- Vui lòng chọn rạp để tải danh sách phòng --</p>';
             return;
         }
 
-        // Bắt đầu thêm các option mới dựa trên tổng số phòng
-        roomSelect.innerHTML = '<option class="bg-surface-dark text-slate-400" value="">-- Chọn phòng chiếu --</option>';
-        
+        // Tạo mảng checkbox thay vì các thẻ <option>
         for (let i = 1; i <= totalRooms; i++) {
-            // Thêm số 0 ở trước nếu < 10 (VD: P01, P02...)
             let roomCode = 'P' + (i < 10 ? '0' + i : i);
             let roomLabel = 'Phòng ' + (i < 10 ? '0' + i : i) + ' (' + roomCode + ')';
             
-            let option = document.createElement('option');
-            option.value = roomCode;
-            option.className = 'bg-surface-dark text-slate-100';
-            option.textContent = roomLabel;
+            let label = document.createElement('label');
+            label.className = 'flex items-center gap-3 cursor-pointer bg-surface-dark hover:border-primary px-4 py-3 rounded-xl border border-accent-dark transition-colors group';
             
-            roomSelect.appendChild(option);
+            let checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'room_names[]'; // Biến mảng PHP
+            checkbox.value = roomCode;
+            checkbox.className = 'w-5 h-5 rounded bg-background-dark border-2 border-accent-dark text-primary focus:ring-primary focus:ring-offset-background-dark cursor-pointer';
+            
+            let span = document.createElement('span');
+            span.className = 'text-sm font-bold text-slate-300 group-hover:text-primary transition-colors';
+            span.textContent = roomLabel;
+            
+            label.appendChild(checkbox);
+            label.appendChild(span);
+            roomSelect.appendChild(label);
         }
     }
 </script>

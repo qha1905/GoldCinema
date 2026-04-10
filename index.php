@@ -94,9 +94,9 @@ if (isset($_SESSION["user_logged_in"]) && $_SESSION["role"] !== 'admin') {
     $stmt_rank->execute([$_SESSION["user_id"]]);
     $total_spent = $stmt_rank->fetchColumn() ?: 0;
     
-    if ($total_spent >= 2000000) {
+    if ($total_spent >= 10000000) {
         $user_rank_display = 'HẠNG PLATINUM';
-    } elseif ($total_spent >= 500000) {
+    } elseif ($total_spent >= 2000000) {
         $user_rank_display = 'HẠNG VÀNG';
     }
 }

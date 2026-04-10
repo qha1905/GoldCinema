@@ -34,19 +34,36 @@ $showtimes = $stmt_shows->fetchAll();
 // --- XỬ LÝ MODULE ĐÁNH GIÁ (REVIEW) ---
 // ==============================================================
 $can_review = false;
-if (isset($_SESSION["user_logged_in"])) {
-    // Kiểm tra xem khách hàng ĐÃ MUA VÉ phim này chưa
-    $stmt_check = $pdo->prepare("SELECT id FROM orders WHERE user_id = ? AND movie_id = ? AND status = 'completed' LIMIT 1");
-    $stmt_check->execute([$_SESSION["user_id"], $movie_id]);
-    if ($stmt_check->fetch()) $can_review = true;
+$already_reviewed = false;
 
-    // Xử lý khi khách hàng gửi Review
+if (isset($_SESSION["user_logged_in"])) {
+    $user_id = $_SESSION["user_id"];
+
+    // 1. Kiểm tra xem khách hàng ĐÃ MUA VÉ phim này chưa
+    $stmt_check_order = $pdo->prepare("SELECT id FROM orders WHERE user_id = ? AND movie_id = ? AND status = 'completed' LIMIT 1");
+    $stmt_check_order->execute([$user_id, $movie_id]);
+    $has_ticket = $stmt_check_order->fetch();
+
+    // 2. Kiểm tra xem khách hàng ĐÃ ĐÁNH GIÁ phim này chưa
+    $stmt_check_review = $pdo->prepare("SELECT id FROM reviews WHERE user_id = ? AND movie_id = ? LIMIT 1");
+    $stmt_check_review->execute([$user_id, $movie_id]);
+    if ($stmt_check_review->fetch()) {
+        $already_reviewed = true;
+    }
+
+    // Chỉ cho phép hiện Form nếu: Đã có vé VÀ Chưa đánh giá lần nào
+    if ($has_ticket && !$already_reviewed) {
+        $can_review = true;
+    }
+
+    // Xử lý khi khách hàng gửi Review (Thêm ràng buộc ở phía Server để chống Bypass)
     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review'])) {
         $rating = (int)$_POST['rating'];
-        $comment = trim($_POST['comment']);
-        if ($can_review && $rating >= 1 && $rating <= 5 && !empty($comment)) {
+        $comment = trim($_POST['comment'] ?? '');
+        
+        if ($can_review && $rating >= 1 && $rating <= 5) {
             $stmt_insert = $pdo->prepare("INSERT INTO reviews (user_id, movie_id, rating, comment) VALUES (?, ?, ?, ?)");
-            $stmt_insert->execute([$_SESSION["user_id"], $movie_id, $rating, $comment]);
+            $stmt_insert->execute([$user_id, $movie_id, $rating, $comment]);
             header("Location: chon_suat.php?id=" . $movie_id . "#reviews-section");
             exit;
         }
@@ -224,15 +241,21 @@ foreach ($showtimes as $show) {
                                 </select>
                             </div>
                             <div class="mb-4">
-                                <label class="text-xs font-bold text-slate-400 block mb-2">Cảm nhận của bạn</label>
-                                <textarea name="comment" required rows="3" class="w-full bg-background-dark border border-accent-dark rounded-xl py-2 px-3 text-slate-200 outline-none focus:border-primary placeholder:text-slate-600" placeholder="Bộ phim này thế nào?"></textarea>
+                                <label class="text-xs font-bold text-slate-400 block mb-2">Cảm nhận của bạn (Không bắt buộc)</label>
+                                <textarea name="comment" rows="3" class="w-full bg-background-dark border border-accent-dark rounded-xl py-2 px-3 text-slate-200 outline-none focus:border-primary placeholder:text-slate-600" placeholder="Chia sẻ thêm cảm nhận của bạn..."></textarea>
                             </div>
                             <button type="submit" name="submit_review" class="w-full bg-primary text-background-dark font-bold py-3 rounded-xl hover:bg-primary/90 transition-all">Gửi Đánh Giá</button>
                         </form>
+                    <?php elseif ($already_reviewed): ?>
+                        <div class="bg-background-dark border border-primary/20 rounded-2xl p-6 text-center border-dashed">
+                            <span class="material-symbols-outlined text-4xl text-primary mb-2">task_alt</span>
+                            <p class="text-sm text-slate-200 font-bold">Bạn đã gửi đánh giá cho phim này.</p>
+                            <p class="text-[11px] text-slate-500 mt-2 italic">Cảm ơn bạn đã đóng góp ý kiến để giúp cộng đồng Gold Cinema phát triển hơn!</p>
+                        </div>
                     <?php else: ?>
                         <div class="bg-background-dark border border-accent-dark rounded-2xl p-6 text-center border-dashed">
                             <span class="material-symbols-outlined text-4xl text-slate-600 mb-2">verified_user</span>
-                            <p class="text-sm text-slate-400">Chỉ những khách hàng <strong class="text-primary">đã mua vé xem phim này</strong> mới có quyền gửi đánh giá để đảm bảo tính minh bạch.</p>
+                            <p class="text-sm text-slate-400">Chỉ những khách hàng <strong class="text-primary">đã mua vé xem phim này</strong> mới có quyền gửi đánh giá.</p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -258,7 +281,9 @@ foreach ($showtimes as $show) {
                                         <?php echo str_repeat('⭐', $rev['rating']); ?>
                                     </div>
                                 </div>
-                                <p class="text-slate-300 text-sm mt-3 ml-13 leading-relaxed"><?php echo nl2br(htmlspecialchars($rev['comment'])); ?></p>
+                                <?php if (!empty(trim($rev['comment']))): ?>
+                                    <p class="text-slate-300 text-sm mt-3 ml-13 leading-relaxed"><?php echo nl2br(htmlspecialchars($rev['comment'])); ?></p>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
